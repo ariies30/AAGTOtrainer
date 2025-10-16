@@ -144,15 +144,31 @@
           </div>
         </div>
 
-        <div class="row">
-          <button id="startBtn" class="primary">Inizia ▶</button>
-          <span class="badged">
-            <span class="tag">Modalità demo</span>
-            UI e logica base: nessun solver GTO incluso.
-          </span>
-        </div>
-      </div>
-    </section>
+<div class="row">
+  <button id="startBtn" class="primary">Inizia ▶</button>
+  <span class="badged">
+    <span class="tag">Modalità demo</span>
+    UI e logica base: nessun solver GTO incluso.
+  </span>
+</div>
+</div>
+</section>
+
+<script>
+  // redirect verso table.html solo se è cash game HU 100bb
+  document.getElementById('startBtn').addEventListener('click', () => {
+    const type = document.getElementById('gameType').value;
+    const players = document.getElementById('players').value;
+    const stack = document.getElementById('stack').value;
+
+    if (type === 'cash' && players === 'hu' && stack === '100') {
+      window.location.href = 'table.html'; // apre la pagina del tavolo
+    } else {
+      alert('Per ora è disponibile solo: Cash Game → Heads Up → 100bb');
+    }
+  });
+</script>
+
 
     <!-- ===================== TABLE (SIM) ===================== -->
     <section id="table" class="panel">
@@ -214,39 +230,3 @@
         Questa è una simulazione grafica; la logica di puntate/stack è volutamente minimale.</div>
     </section>
   </div>
-
-  <script>
-    // ===== Utilities =====
-    const $ = sel => document.querySelector(sel);
-
-    const RANKS = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
-    const SUITS = ['♣','♦','♥','♠'];
-    const isRed = s => (s === '♦' || s === '♥');
-
-    function buildDeck(){
-      const d=[];
-      for(const r of RANKS){ for(const s of SUITS){ d.push(r+s); } }
-      return d;
-    }
-    function shuffle(a){
-      for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-      return a;
-    }
-
-    function cardEl(txt){
-      const el = document.createElement('div');
-      el.className = 'card';
-      el.textContent = txt;
-      if(/♦|♥/.test(txt)) el.style.color = '#ffb4c1';
-      return el;
-    }
-    function faceDownEl(){
-      const el = document.createElement('div');
-      el.className = 'card face-down';
-      el.textContent = '🂠';
-      return el;
-    }
-
-    // ===== Views =====
-    const setup = $('#setup');
-    const table
