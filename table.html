@@ -24,7 +24,17 @@
 
     /* Table */
     .table-wrap{position:relative; aspect-ratio:16/9; width:100%;}
-    .table-oval{position:absolute; inset:0; margin:auto; width:100%; height:100%; background: radial-gradient(ellipse at center, #0d7c52 0%, #0b5e3b 60%, #084b2f 100%); border-radius:50% / 40%; border:10px solid #2d190a; box-shadow:inset 0 0 0 3px #0a3e2a, 0 30px 60px rgba(0,0,0,.45)}
+    .table-oval{
+  position:absolute;
+  inset:12% 16%;      /* restringe il tavolo lasciando spazio attorno */
+  margin:auto;
+  width:auto; height:auto;
+  background: radial-gradient(ellipse at center, #0d7c52 0%, #0b5e3b 60%, #084b2f 100%);
+  border-radius:50% / 40%;
+  border:10px solid #2d190a;
+  box-shadow:inset 0 0 0 3px #0a3e2a, 0 30px 60px rgba(0,0,0,.45);
+}
+
     .center-pot{position:absolute; left:50%; top:48%; transform:translate(-50%,-50%); padding:10px 14px; border-radius:12px; background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(6px)}
 
     /* Mazziere fisso (in basso al centro, fuori dall'ovale) */
@@ -33,7 +43,13 @@
     .dealer-person .label{margin-top:6px; text-align:center; font-size:12px; color:var(--muted)}
 
     /* Dealer button (dinamico, segue il BTN) */
-    .dealer{position:absolute; width:34px; height:34px; border-radius:50%; background:#fff; color:#111; display:grid; place-items:center; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.35)}
+    .dealer{
+  position:absolute; width:30px; height:30px;
+  border-radius:50%; background:#fff; color:#111;
+  display:grid; place-items:center; font-weight:700;
+  box-shadow:0 4px 12px rgba(0,0,0,.35);
+  z-index:6;
+}
     /* Chip generica */
 .chip {
   position:absolute;
@@ -60,29 +76,49 @@
 
 
     /* Seats */
-    .seat{position:absolute; width:220px; max-width:32vw}
-    .seat .box{background:rgba(0,0,0,.42); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:10px; display:grid; gap:8px}
+    .seat{position:absolute; width:170px; max-width:26vw}
+    .seat .box{
+  background:rgba(0,0,0,.42);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+  padding:8px;
+  display:grid; gap:6px;
+}
     .seat .name{display:flex; justify-content:space-between; align-items:center}
     .chips{font-variant-numeric:tabular-nums; color:#e7f7ff}
-    .pos-tag{font-size:11px; color:#d1ffe6; border:1px solid rgba(255,255,255,.2); padding:2px 8px; border-radius:999px}
+    .pos-tag{
+  font-size:10px;
+  color:#d1ffe6;
+  border:1px solid rgba(255,255,255,.2);
+  padding:2px 6px; border-radius:999px;
+}
     .cards{display:flex; gap:8px}
-    .card{width:50px; height:70px; border-radius:8px; background:#0c1220; border:1px solid #1f2b44; display:grid; place-items:center; font-weight:700; font-size:18px; box-shadow:0 4px 10px rgba(0,0,0,.35)}
+    .card{
+  width:40px; height:56px;
+  border-radius:8px;
+  background:#0c1220;
+  border:1px solid #1f2b44;
+  display:grid; place-items:center;
+  font-weight:700; font-size:16px;
+  box-shadow:0 4px 10px rgba(0,0,0,.35);
+}
     .card.face-down{background:repeating-linear-gradient(135deg,#0e264f,#0e264f 8px,#0a1b37 8px,#0a1b37 16px); border-color:#10356a}
 
     /* Inattivi */
     .inactive .box{opacity:.45; filter:grayscale(80%)}
     .sitout{font-size:11px; color:#ffd5d5; background:rgba(255,92,122,.12); border:1px solid rgba(255,92,122,.35); padding:3px 8px; border-radius:999px}
 
-    /* 9-max: p1 è in basso a SINISTRA del mazziere, poi orario fino a p9 (che è in basso a DESTRA) */
-    .p1{left:27%; bottom:10%; transform:translateX(-50%);} /* TU fisso, BL (bottom-left) */
-    .p2{left:10%; top:62%; transform:translateX(-50%);}    /* Left lower  */
-    .p3{left:10%; top:28%; transform:translateX(-50%);}    /* Left upper  */
-    .p4{left:27%; top:10%; transform:translateX(-50%);}    /* Upper-left  */
-    .p5{left:50%; top:4%;  transform:translateX(-50%);}    /* Top center  */
-    .p6{left:73%; top:10%; transform:translateX(-50%);}    /* Upper-right */
-    .p7{left:90%; top:28%; transform:translateX(-50%);}    /* Right upper */
-    .p8{left:90%; top:62%; transform:translateX(-50%);}    /* Right lower */
-    .p9{left:73%; bottom:10%; transform:translateX(-50%);} /* BR (bottom-right) */
+/* 9-max: p1 è in basso SINISTRA, poi orario fino a p9 in basso DESTRA */
+.p1{left:20%; bottom:2%; transform:translateX(-50%);} /* TU fisso, BL */
+.p2{left:8%; top:66%; transform:translateX(-50%);}    /* Left lower  */
+.p3{left:6%; top:28%; transform:translateX(-50%);}    /* Left upper  */
+.p4{left:20%; top:6%; transform:translateX(-50%);}    /* Upper-left  */
+.p5{left:50%; top:2%;  transform:translateX(-50%);}   /* Top center  */
+.p6{left:80%; top:6%;  transform:translateX(-50%);}   /* Upper-right */
+.p7{left:94%; top:28%; transform:translateX(-50%);}   /* Right upper */
+.p8{left:92%; top:66%; transform:translateX(-50%);}   /* Right lower */
+.p9{left:80%; bottom:2%; transform:translateX(-50%);} /* BR */
+
 
     /* Board */
     .board{position:absolute; left:50%; top:28%; transform:translateX(-50%); display:flex; gap:8px}
@@ -152,17 +188,18 @@
     function faceDownEl(){ const el=document.createElement('div'); el.className='card face-down'; el.textContent='🂠'; return el; }
 
     // Coordinate per il chip BTN vicino ai seat p1..p9 (coerenti con le classi CSS p1..p9)
-    const BTN_POS = {
-      1: {left:'24%', top:'74%'},  // vicino a p1
-      2: {left:'12%', top:'62%'},
-      3: {left:'12%', top:'30%'},
-      4: {left:'24%', top:'16%'},
-      5: {left:'50%', top:'12%'},
-      6: {left:'76%', top:'16%'},
-      7: {left:'88%', top:'30%'},
-      8: {left:'88%', top:'62%'},
-      9: {left:'76%', top:'74%'}
-    };
+const BTN_POS = {
+  1: {left:'28%', top:'64%'},
+  2: {left:'18%', top:'60%'},
+  3: {left:'16%', top:'32%'},
+  4: {left:'28%', top:'20%'},
+  5: {left:'50%', top:'18%'},
+  6: {left:'72%', top:'20%'},
+  7: {left:'84%', top:'32%'},
+  8: {left:'82%', top:'60%'},
+  9: {left:'72%', top:'64%'}
+};
+
 
     // Riferimenti ai 9 seat
     const seats = $$('.seat').map((el,idx)=>({
@@ -297,14 +334,11 @@
       if(pos){ btnEl.style.left = pos.left; btnEl.style.top = pos.top; }
     }
 
-    function placeBlindChips(){
-  // SB è il seat successivo al BTN, BB quello dopo ancora (orario)
+function placeBlindChips(){
   const sbSeat = btnSeat % 9 + 1;
   const bbSeat = (sbSeat % 9) + 1;
-
   const sbPos = BTN_POS[sbSeat];
   const bbPos = BTN_POS[bbSeat];
-
   if (sbPos) { sbEl.style.left = sbPos.left; sbEl.style.top = sbPos.top; }
   if (bbPos) { bbEl.style.left = bbPos.left; bbEl.style.top = bbPos.top; }
 }
