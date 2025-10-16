@@ -324,22 +324,32 @@ function resetSeats(){
       seatInfoEl.textContent = `tu: ${tuPos} · player: ${plPos}`;
     }
 
-    function renderHands(){
-      seats.forEach((s,idx)=>{
-        const i = idx+1;
-        if(i===tuSeat){
-          s.cardsEl.innerHTML='';
-          if(tuFaceUp) tuCards.forEach(c=>s.cardsEl.appendChild(cardEl(c)));
-          else { s.cardsEl.appendChild(faceDownEl()); s.cardsEl.appendChild(faceDownEl()); }
-        } else if(i===playerSeat){
-          s.cardsEl.innerHTML='';
-          if(playerFaceUp) playerCards.forEach(c=>s.cardsEl.appendChild(cardEl(c)));
-          else { s.cardsEl.appendChild(faceDownEl()); s.cardsEl.appendChild(faceDownEl()); }
-        } else {
-          s.cardsEl.innerHTML='<div class="card face-down">🂠</div><div class="card face-down">🂠</div>';
-        }
-      });
+function renderHands(){
+  seats.forEach((s, idx) => {
+    const i = idx + 1;
+    if (i === tuSeat) {
+      s.cardsEl.innerHTML = '';
+      if (tuFaceUp) {
+        tuCards.forEach(c => s.cardsEl.appendChild(cardEl(c)));
+      } else {
+        s.cardsEl.appendChild(faceDownEl());
+        s.cardsEl.appendChild(faceDownEl());
+      }
+    } else if (i === playerSeat) {
+      s.cardsEl.innerHTML = '';
+      if (playerFaceUp) {
+        playerCards.forEach(c => s.cardsEl.appendChild(cardEl(c)));
+      } else {
+        s.cardsEl.appendChild(faceDownEl());
+        s.cardsEl.appendChild(faceDownEl());
+      }
+    } else {
+      // SEAT INATTIVO: niente elementi .card, spazio completamente vuoto
+      s.cardsEl.innerHTML = '';
     }
+  });
+}
+
 
     function renderBoard(){
       boardEl.innerHTML='';
