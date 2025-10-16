@@ -159,14 +159,22 @@
 
     #table{padding:22px}
 
-    #history{
-  position:absolute !important;
-  top:0 !important;           /* incollato in alto */
-  right:0 !important;         /* incollato a destra */
-  margin:8px !important;      /* piccolo distacco dai bordi */
-  transform:none !important;  /* annulla eventuali translate precedenti */
-  z-index:999 !important;     /* resta sopra tutto */
+/* History overlay in alto a destra dello schermo */
+#history {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.08);
+  padding: 10px 12px;
+  border-radius: 10px;
+  width: min(32%, 360px);
+  font-size: 12px;
+  line-height: 1.35;
+  backdrop-filter: blur(6px);
+  z-index: 999;
 }
+
   </style>
 </head>
 <body>
@@ -184,6 +192,11 @@
     </div>
 
     <div class="table-wrap">
+      <div class="history" id="history">
+  <div><strong>Preflop:</strong> —</div>
+  <div><strong>Flop:</strong> —</div>
+  <div><strong>Turn:</strong> —</div>
+  <div><strong>River:</strong> —</div>
       <div class="table-oval"></div>
       <div class="center-pot" id="pot">Piatto: 0 bb</div>
 
@@ -201,13 +214,7 @@
 
       <!-- Board cards -->
       <div class="board" id="board"></div>
-      <!-- History panel -->
-<div class="history" id="history">
-  <div><strong>Preflop:</strong> —</div>
-  <div><strong>Flop:</strong> —</div>
-  <div><strong>Turn:</strong> —</div>
-  <div><strong>River:</strong> —</div>
-</div>
+
 
 <!-- Action bar -->
 <div class="action-bar" id="actions"></div>
