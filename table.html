@@ -51,15 +51,28 @@
 
     /* Carte (stile scuro precedente) */
     /* Carta “vera” basata su immagine */
+/* Carte con angoli vivi (non tagliano le figure) */
 .card{
-  width:54px; height:78px;      /* proporzione 2.5x3.5” approx */
-  border-radius:8px; overflow:hidden;
+  width:54px;
+  height:78px;
+  border-radius:4px;           /* o 0 se vuoi totalmente squadrate */
+  overflow:visible;            /* evita il taglio dei bordi interni */
   box-shadow:0 2px 6px rgba(0,0,0,.25);
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
+
 .card img{
-  display:block; width:100%; height:100%; object-fit:cover;
-  border:1px solid #d9e0ea; border-radius:8px;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;          /* mostra l’intera immagine senza ritagliarla */
+  border:none;                 /* niente bordo esterno */
+  border-radius:0;             /* niente arrotondamento */
 }
+
 
     /* Inattivi */
     .inactive .box{opacity:.45; filter:grayscale(80%)}
