@@ -6,24 +6,13 @@
   <title>Poker Trainer – 9-max, TU fisso p1 (a sinistra del mazziere), BTN che ruota</title>
   <style>
     /* History panel (alto-dx) */
-/* History panel (alto-dx) — fissato realmente in alto a destra */
-.table-wrap .history{
-  position:absolute;
-  top:0 !important;
-  right:0 !important;
-  margin:8px;         /* piccolo distacco dai bordi */
-  background:rgba(0,0,0,.35);
-  border:1px solid rgba(255,255,255,.08);
-  padding:10px 12px;
-  border-radius:10px;
-  width:min(32%, 360px);
-  font-size:12px;
-  line-height:1.35;
-  backdrop-filter:blur(6px);
-  z-index:20;
+.history{
+  position:absolute; right:10px; top:10px;
+  background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.08);
+  padding:10px 12px; border-radius:10px;
+  width:min(32%, 360px); font-size:12px; line-height:1.35;
+  backdrop-filter: blur(6px)
 }
-
-
 .history strong{color:#e6f7ff}
 .history div+div{margin-top:6px}
 
@@ -158,23 +147,6 @@
     .board .card{ width:60px; height:86px }
 
     #table{padding:22px}
-
-/* History overlay in alto a destra dello schermo */
-#history {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  background: rgba(0,0,0,.35);
-  border: 1px solid rgba(255,255,255,.08);
-  padding: 10px 12px;
-  border-radius: 10px;
-  width: min(32%, 360px);
-  font-size: 12px;
-  line-height: 1.35;
-  backdrop-filter: blur(6px);
-  z-index: 999;
-}
-
   </style>
 </head>
 <body>
@@ -192,11 +164,6 @@
     </div>
 
     <div class="table-wrap">
-      <div class="history" id="history">
-  <div><strong>Preflop:</strong> —</div>
-  <div><strong>Flop:</strong> —</div>
-  <div><strong>Turn:</strong> —</div>
-  <div><strong>River:</strong> —</div>
       <div class="table-oval"></div>
       <div class="center-pot" id="pot">Piatto: 0 bb</div>
 
@@ -214,7 +181,13 @@
 
       <!-- Board cards -->
       <div class="board" id="board"></div>
-
+      <!-- History panel -->
+<div class="history" id="history">
+  <div><strong>Preflop:</strong> —</div>
+  <div><strong>Flop:</strong> —</div>
+  <div><strong>Turn:</strong> —</div>
+  <div><strong>River:</strong> —</div>
+</div>
 
 <!-- Action bar -->
 <div class="action-bar" id="actions"></div>
