@@ -41,38 +41,25 @@
     button.primary{background:linear-gradient(180deg,#1a7a58,#11573f); border-color:#1a7a58}
     button:hover{transform:translateY(-1px); box-shadow:0 8px 25px var(--ring)}
 
-    /* Toolbar */
-    <div class="toolbar">
-  <div class="left">
-    <a href="index.html"><button>⟵ Menù</button></a>
-    <button id="dealBtn" class="primary">Distribuisci mano</button>
-    <button id="flipPlayer">Mostra/Nascondi carte "player"</button>
 
-
-.tags-row{
+.toolbar{
   display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-top:6px;               /* un filo di respiro sotto i bottoni */
-}
-  </div>
-  <!-- ❌ rimuovi completamente questo:
-  <div class="right"> ... </div>
-  -->
-</div>
-
-    .toolbar{
-  display:flex;
-  flex-direction:column;        /* ⬅️ niente space-between */
+  justify-content:space-between;
   gap:10px;
-  align-items:flex-start;       /* tutto agganciato a sinistra */
+  align-items:center;
   padding:12px 16px;
 }
-    .toolbar .left{
+.toolbar .left, .toolbar .right{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
   align-items:center;
+}
+    .tags-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:6px;
 }
 
     /* Table */
@@ -146,7 +133,21 @@
     .board{position:absolute; left:50%; top:28%; transform:translateX(-50%); display:flex; gap:8px}
     .board .card{ width:60px; height:86px }
 
-    #table{padding:22px}
+#table{ padding:22px; position:relative; }
+    #history{
+  position:absolute;
+  top:12px;
+  right:12px;
+  background:rgba(0,0,0,.35);
+  border:1px solid rgba(255,255,255,.08);
+  padding:10px 12px;
+  border-radius:10px;
+  width:min(32%, 360px);
+  font-size:12px;
+  line-height:1.35;
+  backdrop-filter:blur(6px);
+  z-index:999;
+}
   </style>
 </head>
 <body>
@@ -162,6 +163,13 @@
         <span class="tag" id="streetTag">Street: —</span>
       </div>
     </div>
+
+      <div class="history" id="history">
+    <div><strong>Preflop:</strong> —</div>
+    <div><strong>Flop:</strong> —</div>
+    <div><strong>Turn:</strong> —</div>
+    <div><strong>River:</strong> —</div>
+  </div>
 
     <div class="table-wrap">
       <div class="table-oval"></div>
@@ -182,12 +190,7 @@
       <!-- Board cards -->
       <div class="board" id="board"></div>
       <!-- History panel -->
-<div class="history" id="history">
-  <div><strong>Preflop:</strong> —</div>
-  <div><strong>Flop:</strong> —</div>
-  <div><strong>Turn:</strong> —</div>
-  <div><strong>River:</strong> —</div>
-</div>
+
 
 <!-- Action bar -->
 <div class="action-bar" id="actions"></div>
