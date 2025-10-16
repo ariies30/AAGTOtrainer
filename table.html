@@ -6,11 +6,12 @@
   <title>Poker Trainer – 9-max, TU fisso p1 (a sinistra del mazziere), BTN che ruota</title>
   <style>
     /* History panel (alto-dx) */
-.history{
+/* History panel (alto-dx) — fissato realmente in alto a destra */
+.table-wrap .history{
   position:absolute;
-  right:20px;
-  top:20px;                   /* era 10px → un po’ più alto */
-  transform:translateY(-10%); /* ⬆️ spinge il box verso l’alto */
+  top:0;              /* era 10px: ora proprio in alto */
+  right:0;            /* attacca al bordo destro del tavolo */
+  margin:8px;         /* piccolo distacco dai bordi */
   background:rgba(0,0,0,.35);
   border:1px solid rgba(255,255,255,.08);
   padding:10px 12px;
@@ -19,8 +20,9 @@
   font-size:12px;
   line-height:1.35;
   backdrop-filter:blur(6px);
-  z-index:20;                 /* resta sempre sopra al tavolo */
+  z-index:20;
 }
+
 
 .history strong{color:#e6f7ff}
 .history div+div{margin-top:6px}
