@@ -5,6 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Poker Trainer – 9-max, TU fisso p1 (a sinistra del mazziere), BTN che ruota</title>
   <style>
+    /* History panel (alto-dx) */
+.history{
+  position:absolute; right:10px; top:10px;
+  background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.08);
+  padding:10px 12px; border-radius:10px;
+  width:min(32%, 360px); font-size:12px; line-height:1.35;
+  backdrop-filter: blur(6px)
+}
+.history strong{color:#e6f7ff}
+.history div+div{margin-top:6px}
+
+/* Action bar (basso-centrale) */
+.action-bar{
+  position:absolute; left:50%; bottom:6%; transform:translateX(-50%);
+  display:flex; gap:10px; flex-wrap:wrap; justify-content:center
+}
+.action-bar .btn{
+  appearance:none; border:1px solid #2a3a58; background:#0f1a2c;
+  color:#e8edf3; padding:10px 14px; border-radius:10px; cursor:pointer
+}
+.action-bar .btn.primary{background:#155e43; border-color:#1a7a58}
+.action-bar .btn.warn{background:#5e1525; border-color:#a03b4d}
+
     :root{
       --bg:#0b0f17; --card:#0f1522; --table:#0b5e3b; --accent:#2fe0a3; --accent-2:#ffd166; --muted:#a0aec0; --text:#e8edf3; --radius:18px; --ring: rgba(47,224,163,.35); --shadow:0 10px 30px rgba(0,0,0,.25); --gap:14px;
     }
@@ -107,6 +130,7 @@
       <div class="right">
         <span class="tag" id="stateTag">9-max · TU fisso p1 · BTN ruota</span>
         <span class="tag" id="seatInfo">tu: — · player: —</span>
+        <span class="tag" id="streetTag">Street: —</span>
       </div>
     </div>
 
@@ -128,6 +152,17 @@
 
       <!-- Board cards -->
       <div class="board" id="board"></div>
+      <!-- History panel -->
+<div class="history" id="history">
+  <div><strong>Preflop:</strong> —</div>
+  <div><strong>Flop:</strong> —</div>
+  <div><strong>Turn:</strong> —</div>
+  <div><strong>River:</strong> —</div>
+</div>
+
+<!-- Action bar -->
+<div class="action-bar" id="actions"></div>
+
 
       <!-- ===== 9 SEATS ===== -->
       <div class="seat p1" id="seat1"><div class="box"><div class="name"><strong class="label-name">Seat 1</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
@@ -220,6 +255,16 @@ function faceDownEl(){
     const boardEl = $('#board');
     const potEl = $('#pot');
     const seatInfoEl = $('#seatInfo');
+    const streetTagEl = document.getElementById('streetTag');
+const historyEl   = document.getElementById('history');
+const actionsEl   = document.getElementById('actions');
+
+// Stato per street & history
+const STREETS = ['preflop','flop','turn','river'];
+let street = 'preflop';
+let history = { preflop: [], flop: [], turn: [], river: [] };
+let toAct = 'tu'; // 'tu' | 'player'
+
 
     // Stato corrente
     const TU_FIXED_SEAT = 1; // TU è sempre p1 (alla sinistra del mazziere)
@@ -294,35 +339,43 @@ function assignPositions(){
       if (bbPos) { bbEl.style.left = bbPos.left; bbEl.style.top = bbPos.top; }
     }
 
-    function newHand(){
-      // Ruota BTN in senso orario
-      btnSeat = btnSeat % 9 + 1;
+function newHand(){
+  // Ruota BTN in senso orario
+  btnSeat = (btnSeat % 9) + 1;
 
-      // Assegna posizioni
-      assignPositions();
+  // Assegna posizioni
+  assignPositions();
 
-      // Scegli avversario tra 2..9
-      const opp = pickOpponentSeat();
-      setActive(TU_FIXED_SEAT, opp);
+  // Scegli avversario tra 2..9
+  const opp = pickOpponentSeat();
+  setActive(TU_FIXED_SEAT, opp);
 
-      // Carte
-      tuFaceUp = true; playerFaceUp = false;
-      const deck = shuffle(buildDeck());
-      tuCards = [deck.pop(), deck.pop()];
-      playerCards = [deck.pop(), deck.pop()];
-      theBoard = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
+  // Carte
+  const deck = shuffle(buildDeck());
+  tuCards = [deck.pop(), deck.pop()];
+  playerCards = [deck.pop(), deck.pop()];
+  theBoard = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
 
-      renderHands();
-      renderBoard();
-      potEl.textContent = 'Piatto: 0 bb';
-      placeDealerChip();
-      placeBlindChips();
+  // Street random + storia
+  street = pickRandomStreet();
+  buildHistoryUpTo(street);
+  renderStreetBoard(street);
 
-      // Info
-      const tuPos = seats[tuSeat-1].posEl.textContent;
-      const plPos = seats[playerSeat-1].posEl.textContent;
-      seatInfoEl.textContent = `tu: ${seats[0].posEl.textContent} · player: ${seats[opp-1].posEl.textContent}`;
-    }
+  // UI
+  renderHands();
+  renderBoard();
+  potEl.textContent = 'Piatto: 0 bb';
+  placeAllChips();
+
+  // Info
+  const tuPos = seats[tuSeat-1].posEl.textContent;
+  const plPos = seats[playerSeat-1].posEl.textContent;
+  seatInfoEl.textContent = `tu: ${tuPos} · player: ${plPos}`;
+  streetTagEl.textContent = `Street: ${street.toUpperCase()}`;
+  renderHistoryPanel();
+  renderActions();
+}
+
 
 function renderHands(){
   seats.forEach((s, idx) => {
@@ -351,10 +404,120 @@ function renderHands(){
 }
 
 
-    function renderBoard(){
-      boardEl.innerHTML='';
-      theBoard.forEach((c,i)=>{ const el=cardEl(c); if(i>2) el.style.opacity=.95; boardEl.appendChild(el); });
+function renderBoard(){
+  boardEl.innerHTML='';
+  // mostra solo le community fino allo street corrente
+  const n = street==='preflop' ? 0 : street==='flop' ? 3 : street==='turn' ? 4 : 5;
+  theBoard.slice(0,n).forEach((c)=>{ const el=cardEl(c); boardEl.appendChild(el); });
+}
+
+    function pickRandomStreet(){
+  // Bias: 10% pre, 55% flop, 30% turn, 5% river (scenari decisionali)
+  const r = Math.random();
+  if(r < 0.10) return 'preflop';
+  if(r < 0.65) return 'flop';
+  if(r < 0.95) return 'turn';
+  return 'river';
+}
+
+function appendAction(st, who, type, size=''){
+  history[st].push({who,type,size});
+}
+
+function randomPreflop(){
+  const r = Math.random();
+  if(r < 0.33){ appendAction('preflop','tu','raise','3bb'); appendAction('preflop','player','call'); toAct = 'tu'; }
+  else if(r < 0.66){ appendAction('preflop','player','raise','3bb'); appendAction('preflop','tu','call'); toAct = 'player'; }
+  else { appendAction('preflop','tu','limp'); appendAction('preflop','player','check'); toAct = 'tu'; }
+}
+
+function randomFlop(){
+  const r = Math.random();
+  if(r < 0.4){ appendAction('flop','tu','bet','1/2'); appendAction('flop','player','call'); toAct = 'tu'; }
+  else if(r < 0.7){ appendAction('flop','player','bet','1/3'); appendAction('flop','tu','call'); toAct = 'player'; }
+  else { appendAction('flop','tu','check'); appendAction('flop','player','check'); toAct = 'tu'; }
+}
+
+function randomTurn(){
+  const r = Math.random();
+  if(r < 0.45){ appendAction('turn','player','bet','2/3'); toAct = 'tu'; }
+  else if(r < 0.75){ appendAction('turn','tu','bet','1/2'); toAct = 'player'; }
+  else { appendAction('turn','tu','check'); toAct = 'player'; }
+}
+
+function buildHistoryUpTo(st){
+  history = { preflop: [], flop: [], turn: [], river: [] };
+  randomPreflop();
+  if(st==='preflop') return;
+  randomFlop();
+  if(st==='flop') return;
+  randomTurn();
+  if(st==='turn') return;
+  // river semplice
+  const r = Math.random();
+  if(r < 0.5){ appendAction('river','player','bet','1/2'); toAct='tu'; }
+  else { appendAction('river','tu','check'); toAct='player'; }
+}
+
+function renderHistoryPanel(){
+  const fmt = (arr)=> arr.length? arr.map(a=>`${a.who}: ${a.type}${a.size?` ${a.size}`:''}`).join(' · ') : '—';
+  historyEl.innerHTML = `
+    <div><strong>Preflop:</strong> ${fmt(history.preflop)}</div>
+    <div><strong>Flop:</strong> ${fmt(history.flop)}</div>
+    <div><strong>Turn:</strong> ${fmt(history.turn)}</div>
+    <div><strong>River:</strong> ${fmt(history.river)}</div>
+  `;
+}
+
+function renderStreetBoard(st){ street = st; renderBoard(); streetTagEl.textContent = `Street: ${street.toUpperCase()}`; }
+
+function lastAggressorOnStreet(st){
+  for(let i=history[st].length-1;i>=0;i--){
+    if(['bet','raise'].includes(history[st][i].type)) return history[st][i].who;
+  }
+  return null;
+}
+
+function addBtn(text, cls, onClick){
+  const b = document.createElement('button');
+  b.className = 'btn'+(cls?` ${cls}`:'');
+  b.textContent = text;
+  b.addEventListener('click', onClick);
+  actionsEl.appendChild(b);
+}
+
+function renderActions(){
+  actionsEl.innerHTML='';
+  const actor = toAct; // 'tu' | 'player'
+  if(actor==='tu'){
+    const aggressor = lastAggressorOnStreet(street);
+    if(aggressor && aggressor!=='tu'){
+      addBtn('Call',  'primary', ()=>{ appendAction(street,'tu','call'); toAct='player'; renderHistoryPanel(); renderActions(); });
+      addBtn('Raise', '',        ()=>{ appendAction(street,'tu','raise','2x'); toAct='player'; renderHistoryPanel(); renderActions(); });
+      addBtn('Fold',  'warn',    ()=>{ appendAction(street,'tu','fold'); actionsEl.innerHTML='<span class="tag">Mano terminata</span>'; renderHistoryPanel(); });
+    } else {
+      addBtn('Check', '',        ()=>{ appendAction(street,'tu','check'); toAct='player'; renderHistoryPanel(); renderActions(); });
+      addBtn('Bet 1/2','primary',()=>{ appendAction(street,'tu','bet','1/2'); toAct='player'; renderHistoryPanel(); renderActions(); });
     }
+  } else {
+    // semplice simulazione avversario
+    const aggressor = lastAggressorOnStreet(street);
+    const r = Math.random();
+    if(aggressor && aggressor!=='player'){
+      if(r<0.5){ appendAction(street,'player','call'); }
+      else if(r<0.75){ appendAction(street,'player','raise','2x'); }
+      else { appendAction(street,'player','fold'); actionsEl.innerHTML='<span class="tag">Mano terminata</span>'; renderHistoryPanel(); return; }
+      toAct='tu';
+    } else {
+      if(r<0.5){ appendAction(street,'player','check'); toAct='tu'; }
+      else { appendAction(street,'player','bet','1/3'); toAct='tu'; }
+    }
+    renderHistoryPanel();
+    renderActions();
+  }
+}
+
+
 
     // Handlers UI
     document.getElementById('dealBtn').addEventListener('click', newHand);
