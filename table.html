@@ -34,6 +34,30 @@
 
     /* Dealer button (dinamico, segue il BTN) */
     .dealer{position:absolute; width:34px; height:34px; border-radius:50%; background:#fff; color:#111; display:grid; place-items:center; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.35)}
+    /* Chip generica */
+.chip {
+  position:absolute;
+  width:34px; height:34px;
+  border-radius:50%;
+  display:grid; place-items:center;
+  font-weight:700;
+  box-shadow:0 4px 12px rgba(0,0,0,.35);
+  border:1px solid rgba(0,0,0,.2);
+  color:#111;
+}
+
+/* BTN = chip bianca con D (già esistente, manteniamo .dealer come alias di .chip-btn) */
+.chip-btn { background:#fff; }
+
+/* Small blind e Big blind */
+.chip-sb { background:#9fd4ff; } /* azzurra */
+.chip-bb { background:#ff9da0; } /* rossa */
+
+/* Omino del mazziere (solo contenitore, l’icona è testo/emoji) */
+.dealer-person .icon {
+  font-size:28px; line-height:1; text-align:center;
+}
+
 
     /* Seats */
     .seat{position:absolute; width:220px; max-width:32vw}
@@ -86,13 +110,16 @@
       <div class="center-pot" id="pot">Piatto: 0 bb</div>
 
       <!-- Mazziere fisso (in basso al centro, fuori dall'ovale) -->
-      <div class="dealer-person">
-        <div class="chip">D</div>
-        <div class="label">Mazziere</div>
-      </div>
+<div class="dealer-person">
+  <div class="icon">👤</div>
+  <div class="label">Mazziere</div>
+</div>
+
 
       <!-- Dealer button (dinamico, si muove con il BTN) -->
-      <div class="dealer" id="btn">D</div>
+      <div class="chip chip-btn" id="btn">D</div>
+      <div class="chip chip-sb" id="sb">SB</div>
+      <div class="chip chip-bb" id="bb">BB</div>
 
       <!-- Board cards -->
       <div class="board" id="board"></div>
@@ -151,6 +178,8 @@
     const boardEl = $('#board');
     const potEl = $('#pot');
     const seatInfoEl = $('#seatInfo');
+    const sbEl = document.getElementById('sb');
+    const bbEl = document.getElementById('bb');
 
     // Stato corrente
     const TU_FIXED_SEAT = 1; // TU è sempre p1 (alla sinistra del mazziere)
@@ -233,6 +262,7 @@
       renderBoard();
       potEl.textContent = 'Piatto: 0 bb';
       placeDealerChip();
+      placeBlindChips();
 
       // Info
       const tuPos = seats[tuSeat-1].posEl.textContent;
@@ -267,6 +297,19 @@
       if(pos){ btnEl.style.left = pos.left; btnEl.style.top = pos.top; }
     }
 
+    function placeBlindChips(){
+  // SB è il seat successivo al BTN, BB quello dopo ancora (orario)
+  const sbSeat = btnSeat % 9 + 1;
+  const bbSeat = (sbSeat % 9) + 1;
+
+  const sbPos = BTN_POS[sbSeat];
+  const bbPos = BTN_POS[bbSeat];
+
+  if (sbPos) { sbEl.style.left = sbPos.left; sbEl.style.top = sbPos.top; }
+  if (bbPos) { bbEl.style.left = bbPos.left; bbEl.style.top = bbPos.top; }
+}
+
+
     // Handlers UI
     document.getElementById('dealBtn').addEventListener('click', newHand);
     document.getElementById('flipTu').addEventListener('click', ()=>{ tuFaceUp = !tuFaceUp; renderHands(); });
@@ -275,6 +318,7 @@
     // Avvio
     assignPositions();
     placeDealerChip();
+    placeBlindChips();
     newHand();
   </script>
 </body>
