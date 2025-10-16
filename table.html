@@ -7,12 +7,21 @@
   <style>
     /* History panel (alto-dx) */
 .history{
-  position:absolute; right:10px; top:10px;
-  background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.08);
-  padding:10px 12px; border-radius:10px;
-  width:min(32%, 360px); font-size:12px; line-height:1.35;
-  backdrop-filter: blur(6px)
+  position:absolute;
+  right:20px;
+  top:20px;                   /* era 10px → un po’ più alto */
+  transform:translateY(-10%); /* ⬆️ spinge il box verso l’alto */
+  background:rgba(0,0,0,.35);
+  border:1px solid rgba(255,255,255,.08);
+  padding:10px 12px;
+  border-radius:10px;
+  width:min(32%, 360px);
+  font-size:12px;
+  line-height:1.35;
+  backdrop-filter:blur(6px);
+  z-index:20;                 /* resta sempre sopra al tavolo */
 }
+
 .history strong{color:#e6f7ff}
 .history div+div{margin-top:6px}
 
