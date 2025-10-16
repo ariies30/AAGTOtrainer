@@ -14,7 +14,7 @@
     .wrap{width:100%; max-width:1200px}
     .panel{background:linear-gradient(180deg, #121a2b, var(--card)); border:1px solid #1e2a42; border-radius:var(--radius); box-shadow:var(--shadow);}
     .tag{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid #28486e; font-size:12px; color:#cfe6ff; background:#0b1626}
-    button{appearance:none; border:1px solid #24314e; background:#0e1423; color:var(--text); padding:12px 14px; border-radius:12px; font-size:15px; cursor:pointer; border-color:#234b3b; background:linear-gradient(180deg,#0f2e28,#0e1f1a); transition:.2s transform ease, .2s box-shadow ease}
+    button{appearance:none; border:1px solid #24314e; background:#0e1423; color:#e8edf3; padding:12px 14px; border-radius:12px; font-size:15px; cursor:pointer; border-color:#234b3b; background:linear-gradient(180deg,#0f2e28,#0e1f1a); transition:.2s transform ease, .2s box-shadow ease}
     button.primary{background:linear-gradient(180deg,#1a7a58,#11573f); border-color:#1a7a58}
     button:hover{transform:translateY(-1px); box-shadow:0 8px 25px var(--ring)}
 
@@ -24,46 +24,49 @@
 
     /* Table */
     .table-wrap{position:relative; aspect-ratio:16/9; width:100%;}
-    .table-oval{position:absolute; inset:0; margin:auto; width:100%; height:100%; background: radial-gradient(ellipse at center, #0d7c52 0%, #0b5e3b 60%, #084b2f 100%); border-radius:50% / 40%; border:10px solid #2d190a; box-shadow:inset 0 0 0 3px #0a3e2a, 0 30px 60px rgba(0,0,0,.45)}
+    .table-oval{position:absolute; inset:12% 16%; margin:auto; width:auto; height:auto; background: radial-gradient(ellipse at center, #0d7c52 0%, #0b5e3b 60%, #084b2f 100%); border-radius:50% / 40%; border:10px solid #2d190a; box-shadow:inset 0 0 0 3px #0a3e2a, 0 30px 60px rgba(0,0,0,.45)}
     .center-pot{position:absolute; left:50%; top:48%; transform:translate(-50%,-50%); padding:10px 14px; border-radius:12px; background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(6px)}
 
     /* Mazziere fisso (in basso al centro, fuori dall'ovale) */
     .dealer-person{position:absolute; left:50%; bottom:-6%; transform:translateX(-50%); width:140px}
-    .dealer-person .chip{width:42px; height:42px; border-radius:50%; background:#fff; color:#111; display:grid; place-items:center; font-weight:800; margin:auto; box-shadow:0 4px 12px rgba(0,0,0,.35)}
+    .dealer-person .icon{font-size:28px; line-height:1; text-align:center}
     .dealer-person .label{margin-top:6px; text-align:center; font-size:12px; color:var(--muted)}
 
-    /* Dealer button (dinamico, segue il BTN) */
-    .dealer{position:absolute; width:34px; height:34px; border-radius:50%; background:#fff; color:#111; display:grid; place-items:center; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.35)}
+    /* Chip generiche */
+    .chip {position:absolute; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.35); border:1px solid rgba(0,0,0,.2); color:#111; z-index:5}
+    .chip-btn { background:#fff; }
+    .chip-sb { background:#9fd4ff; }
+    .chip-bb { background:#ff9da0; }
+
+    /* Legacy alias per il BTN (D) */
+    .dealer{position:absolute; width:30px; height:30px; border-radius:50%; background:#fff; color:#111; display:grid; place-items:center; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.35); z-index:6}
 
     /* Seats */
-    .seat{position:absolute; width:220px; max-width:32vw}
-    .seat .box{background:linear-gradient(180deg, rgba(0,0,0,.38), rgba(0,0,0,.46)); border:1px solid rgba(255,255,255,.10); border-radius:12px; padding:8px; display:grid; gap:6px; transition:box-shadow .2s ease, border-color .2s ease, transform .2s ease}
-/* evidenziazione player attivi */
-.seat.active .box{border-color:#2fe0a3; box-shadow:0 0 0 2px rgba(47,224,163,.35), 0 12px 28px rgba(47,224,163,.20); transform:translateY(-2px)}
+    .seat{position:absolute; width:170px; max-width:26vw}
+    .seat .box{background:rgba(0,0,0,.42); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:8px; display:grid; gap:6px}
     .seat .name{display:flex; justify-content:space-between; align-items:center}
     .chips{font-variant-numeric:tabular-nums; color:#e7f7ff}
-    .pos-tag{font-size:11px; color:#d1ffe6; border:1px solid rgba(255,255,255,.2); padding:2px 8px; border-radius:999px}
+    .pos-tag{font-size:10px; color:#d1ffe6; border:1px solid rgba(255,255,255,.2); padding:2px 6px; border-radius:999px}
     .cards{display:flex; gap:8px}
-    .card{width:50px; height:70px; border-radius:8px; background:#fff; border:1px solid #d5dde8; display:grid; place-items:center; font-weight:700; font-size:18px; color:#111; font-family: Georgia, 'Times New Roman', Times, serif; box-shadow:0 2px 6px rgba(0,0,0,.25)}
-.card.face-down{background:repeating-linear-gradient(135deg,#0e264f,#0e264f 8px,#0a1b37 8px,#0a1b37 16px); border:1px solid #10356a; color:#eaf2ff; font-family:system-ui}
-/* rosso classico per cuori/quadri */
-.card.red{color:#c1121f}
+
+    /* Carte (stile scuro precedente) */
+    .card{width:40px; height:56px; border-radius:8px; background:#0c1220; border:1px solid #1f2b44; display:grid; place-items:center; font-weight:700; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,.35)}
     .card.face-down{background:repeating-linear-gradient(135deg,#0e264f,#0e264f 8px,#0a1b37 8px,#0a1b37 16px); border-color:#10356a}
 
     /* Inattivi */
-    .inactive .box{opacity:.42; filter:grayscale(85%)}
+    .inactive .box{opacity:.45; filter:grayscale(80%)}
     .sitout{font-size:11px; color:#ffd5d5; background:rgba(255,92,122,.12); border:1px solid rgba(255,92,122,.35); padding:3px 8px; border-radius:999px}
 
-    /* 9-max: p1 è in basso a SINISTRA del mazziere, poi orario fino a p9 (che è in basso a DESTRA) */
-    .p1{left:27%; bottom:10%; transform:translateX(-50%);} /* TU fisso, BL (bottom-left) */
-    .p2{left:10%; top:62%; transform:translateX(-50%);}    /* Left lower  */
-    .p3{left:10%; top:28%; transform:translateX(-50%);}    /* Left upper  */
-    .p4{left:27%; top:10%; transform:translateX(-50%);}    /* Upper-left  */
-    .p5{left:50%; top:4%;  transform:translateX(-50%);}    /* Top center  */
-    .p6{left:73%; top:10%; transform:translateX(-50%);}    /* Upper-right */
-    .p7{left:90%; top:28%; transform:translateX(-50%);}    /* Right upper */
-    .p8{left:90%; top:62%; transform:translateX(-50%);}    /* Right lower */
-    .p9{left:73%; bottom:10%; transform:translateX(-50%);} /* BR (bottom-right) */
+    /* 9-max: p1 è in basso SINISTRA, poi orario fino a p9 (basso DESTRA) */
+    .p1{left:20%; bottom:2%; transform:translateX(-50%);} /* TU fisso, BL */
+    .p2{left:8%; top:66%; transform:translateX(-50%);}    /* Left lower  */
+    .p3{left:6%; top:28%; transform:translateX(-50%);}    /* Left upper  */
+    .p4{left:20%; top:6%; transform:translateX(-50%);}    /* Upper-left  */
+    .p5{left:50%; top:2%;  transform:translateX(-50%);}   /* Top center  */
+    .p6{left:80%; top:6%;  transform:translateX(-50%);}   /* Upper-right */
+    .p7{left:94%; top:28%; transform:translateX(-50%);}   /* Right upper */
+    .p8{left:92%; top:66%; transform:translateX(-50%);}   /* Right lower */
+    .p9{left:80%; bottom:2%; transform:translateX(-50%);} /* BR */
 
     /* Board */
     .board{position:absolute; left:50%; top:28%; transform:translateX(-50%); display:flex; gap:8px}
@@ -92,18 +95,20 @@
 
       <!-- Mazziere fisso (in basso al centro, fuori dall'ovale) -->
       <div class="dealer-person">
-        <div class="chip">D</div>
+        <div class="icon">👤</div>
         <div class="label">Mazziere</div>
       </div>
 
       <!-- Dealer button (dinamico, si muove con il BTN) -->
-      <div class="dealer" id="btn">D</div>
+      <div class="dealer chip chip-btn" id="btn">D</div>
+      <!-- Blinds dinamiche -->
+      <div class="chip chip-sb" id="sb">SB</div>
+      <div class="chip chip-bb" id="bb">BB</div>
 
       <!-- Board cards -->
       <div class="board" id="board"></div>
 
       <!-- ===== 9 SEATS ===== -->
-      <!-- Le etichette delle posizioni (UTG, +1, LJ, HJ, MP, CO, BTN, SB, BB) ruotano ogni mano in base al BTN. -->
       <div class="seat p1" id="seat1"><div class="box"><div class="name"><strong class="label-name">Seat 1</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
       <div class="seat p2" id="seat2"><div class="box"><div class="name"><strong class="label-name">Seat 2</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
       <div class="seat p3" id="seat3"><div class="box"><div class="name"><strong class="label-name">Seat 3</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
@@ -126,26 +131,20 @@
 
     function buildDeck(){ const d=[]; for(const r of RANKS){ for(const s of SUITS){ d.push(r+s); } } return d; }
     function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-    function cardEl(txt){
-      const el=document.createElement('div');
-      el.className='card';
-      el.textContent=txt;
-      if(/♦|♥/.test(txt)) el.classList.add('red');
-      return el;
-    }
+    function cardEl(txt){ const el=document.createElement('div'); el.className='card'; el.textContent=txt; if(/♦|♥/.test(txt)) el.style.color = '#ffb4c1'; return el; }
     function faceDownEl(){ const el=document.createElement('div'); el.className='card face-down'; el.textContent='🂠'; return el; }
 
-    // Coordinate per il chip BTN vicino ai seat p1..p9 (coerenti con le classi CSS p1..p9)
+    // Coordinate per i chip BTN/SB/BB vicino al bordo dell'ovale
     const BTN_POS = {
-      1: {left:'24%', top:'74%'},  // vicino a p1
-      2: {left:'12%', top:'62%'},
-      3: {left:'12%', top:'30%'},
-      4: {left:'24%', top:'16%'},
-      5: {left:'50%', top:'12%'},
-      6: {left:'76%', top:'16%'},
-      7: {left:'88%', top:'30%'},
-      8: {left:'88%', top:'62%'},
-      9: {left:'76%', top:'74%'}
+      1: {left:'28%', top:'64%'},
+      2: {left:'18%', top:'60%'},
+      3: {left:'16%', top:'32%'},
+      4: {left:'28%', top:'20%'},
+      5: {left:'50%', top:'18%'},
+      6: {left:'72%', top:'20%'},
+      7: {left:'84%', top:'32%'},
+      8: {left:'82%', top:'60%'},
+      9: {left:'72%', top:'64%'}
     };
 
     // Riferimenti ai 9 seat
@@ -159,6 +158,8 @@
     }));
 
     const btnEl = $('#btn');
+    const sbEl = $('#sb');
+    const bbEl = $('#bb');
     const boardEl = $('#board');
     const potEl = $('#pot');
     const seatInfoEl = $('#seatInfo');
@@ -177,26 +178,14 @@
     let playerFaceUp = false;
 
     function pickOpponentSeat(){
-      // sceglie un seat tra 2..9
       const pool = [2,3,4,5,6,7,8,9];
       return pool[Math.floor(Math.random()*pool.length)];
     }
 
     function resetSeats(){
       seats.forEach(s=>{
-        s.el.classList.remove('active');
         s.el.classList.add('inactive');
         s.nameEl.textContent = `Seat ${s.idx}`;
-        s.cardsEl.innerHTML = '<div class="card face-down">🂠</div><div class="card face-down">🂠</div>';
-        s.chipsEl.textContent = '—';
-        if(!s.el.querySelector('.sitout')){
-          const badge = document.createElement('span');
-          badge.className='sitout';
-          badge.textContent='Sit out';
-          s.el.querySelector('.name').appendChild(badge);
-        }
-      });
-    }`;
         s.cardsEl.innerHTML = '<div class="card face-down">🂠</div><div class="card face-down">🂠</div>';
         s.chipsEl.textContent = '—';
         if(!s.el.querySelector('.sitout')){
@@ -214,14 +203,10 @@
       [iTu, iPl].forEach(i=>{
         const s = seats[i-1];
         s.el.classList.remove('inactive');
-        s.el.classList.add('active');
         const badge = s.el.querySelector('.sitout');
         if(badge) badge.remove();
         s.chipsEl.textContent = 'Stack: 100 bb';
       });
-      seats[iTu-1].nameEl.textContent = 'tu';
-      seats[iPl-1].nameEl.textContent = 'player';
-    });
       seats[iTu-1].nameEl.textContent = 'tu';
       seats[iPl-1].nameEl.textContent = 'player';
     }
@@ -229,12 +214,24 @@
     function assignPositions(){
       // Ordine orario: UTG, +1, LJ, HJ, MP, CO, BTN, SB, BB
       const POS_CW = ['UTG','+1','LJ','HJ','MP','CO','BTN','SB','BB'];
-      // Applica le etichette partendo da btnSeat come 'BTN' e proseguendo orario
       for(let i=0;i<9;i++){
         const seatIdx = ((btnSeat - 1) + i) % 9; // 0..8
         const labelIdx = (6 + i) % 9;           // parte da 'BTN'
         seats[seatIdx].posEl.textContent = POS_CW[labelIdx];
       }
+    }
+
+    function placeDealerChip(){
+      const pos = BTN_POS[btnSeat];
+      if(pos){ btnEl.style.left = pos.left; btnEl.style.top = pos.top; }
+    }
+    function placeBlindChips(){
+      const sbSeat = btnSeat % 9 + 1;
+      const bbSeat = (sbSeat % 9) + 1;
+      const sbPos = BTN_POS[sbSeat];
+      const bbPos = BTN_POS[bbSeat];
+      if (sbPos) { sbEl.style.left = sbPos.left; sbEl.style.top = sbPos.top; }
+      if (bbPos) { bbEl.style.left = bbPos.left; bbEl.style.top = bbPos.top; }
     }
 
     function newHand(){
@@ -259,6 +256,7 @@
       renderBoard();
       potEl.textContent = 'Piatto: 0 bb';
       placeDealerChip();
+      placeBlindChips();
 
       // Info
       const tuPos = seats[tuSeat-1].posEl.textContent;
@@ -288,11 +286,6 @@
       theBoard.forEach((c,i)=>{ const el=cardEl(c); if(i>2) el.style.opacity=.95; boardEl.appendChild(el); });
     }
 
-    function placeDealerChip(){
-      const pos = BTN_POS[btnSeat];
-      if(pos){ btnEl.style.left = pos.left; btnEl.style.top = pos.top; }
-    }
-
     // Handlers UI
     document.getElementById('dealBtn').addEventListener('click', newHand);
     document.getElementById('flipTu').addEventListener('click', ()=>{ tuFaceUp = !tuFaceUp; renderHands(); });
@@ -301,6 +294,7 @@
     // Avvio
     assignPositions();
     placeDealerChip();
+    placeBlindChips();
     newHand();
   </script>
 </body>
