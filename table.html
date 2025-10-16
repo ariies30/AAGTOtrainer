@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Poker Trainer – Tavolo HU 100bb</title>
+  <style>
+    :root{
+      --bg:#0b0f17; --card:#0f1522; --table:#0b5e3b; --accent:#2fe0a3; --accent-2:#ffd166; --muted:#a0aec0; --text:#e8edf3; --radius:18px; --ring: rgba(47,224,163,.35); --shadow:0 10px 30px rgba(0,0,0,.25); --gap:14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif; background:radial-gradient(1200px 800px at 50% -10%, #132037 0, var(--bg) 55%); color:var(--text); display:flex; align-items:center; justify-content:center; padding:22px}
+    .wrap{width:100%; max-width:1100px}
+    .panel{background:linear-gradient(180deg, #121a2b, var(--card)); border:1px solid #1e2a42; border-radius:var(--radius); box-shadow:var(--shadow);}
+    .tag{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid #28486e; font-size:12px; color:#cfe6ff; background:#0b1626}
+    button, select{appearance:none; border:1px solid #24314e; background:#0e1423; color:var(--text); padding:12px 14px; border-radius:12px; font-size:15px}
+    button{cursor:pointer; border-color:#234b3b; background:linear-gradient(180deg,#0f2e28,#0e1f1a); transition:.2s transform ease, .2s box-shadow ease}
+    button.primary{background:linear-gradient(180deg,#1a7a58,#11573f); border-color:#1a7a58}
+    button:hover{transform:translateY(-1px); box-shadow:0 8px 25px var(--ring)}
+
+    /* Toolbar */
+    .toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; padding:12px 16px}
+    .toolbar .left, .toolbar .right{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+    /* Table */
+    .table-wrap{position:relative; aspect-ratio:16/9; width:100%;}
+    .table-oval{position:absolute; inset:0; margin:auto; width:100%; height:100%; background: radial-gradient(ellipse at center, #0d7c52 0%, #0b5e3b 60%, #084b2f 100%); border-radius:50% / 40%; border:10px solid #2d190a; box-shadow:inset 0 0 0 3px #0a3e2a, 0 30px 60px rgba(0,0,0,.45)}
+    .center-pot{position:absolute; left:50%; top:48%; transform:translate(-50%,-50%); padding:10px 14px; border-radius:12px; background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(6px)}
+    .dealer{position:absolute; width:34px; height:34px; border-radius:50%; background:#fff; color:#111; display:grid; place-items:center; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.35)}
+
+    .seat{position:absolute; width:260px; max-width:40vw}
+    .seat .box{background:rgba(0,0,0,.42); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:10px; display:grid; gap:8px}
+    .seat .name{display:flex; justify-content:space-between; align-items:center}
+    .chips{font-variant-numeric:tabular-nums; color:#e7f7ff}
+    .role{font-size:12px; color:#d1ffe6}
+    .p1{left:50%; top:8%; transform:translateX(-50%);}  /* Villain */
+    .p2{left:50%; bottom:8%; transform:translateX(-50%);} /* Hero */
+
+    .cards{display:flex; gap:8px}
+    .card{width:56px; height:78px; border-radius:8px; background:#0c1220; border:1px solid #1f2b44; display:grid; place-items:center; font-weight:700; font-size:18px; box-shadow:0 4px 10px rgba(0,0,0,.35)}
+    .card.face-down{background:repeating-linear-gradient(135deg,#0e264f,#0e264f 8px,#0a1b37 8px,#0a1b37 16px); border-color:#10356a}
+
+    .board{position:absolute; left:50%; top:28%; transform:translateX(-50%); display:flex; gap:8px}
+    .actions{position:absolute; left:50%; bottom:18%; transform:translateX(-50%); display:flex; gap:8px}
+
+    #table{padding:22px}
+  </style>
+</head>
+<body>
+  <div class="wrap panel" id="table">
+    <div class="toolbar">
+      <div class="left">
+        <a href="index.html"><button>⟵ Menù</button></a>
+        <button id="dealBtn" class="primary">Distribuisci mano</button>
+        <button id="flipHero">Mostra/Nascondi carte Hero</button>
+        <button id="flipVillain">Mostra/Nascondi carte Villain</button>
+      </div>
+      <div class="right">
+        <span class="tag" id="stateTag">HU · 100bb</span>
+        <span class="tag" id="buttonTag">BTN: —</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-oval"></div>
+      <div class="center-pot" id="pot">Piatto: 0 bb</div>
+      <div class="dealer" id="btn" style="display:none">D</div>
+
+      <!-- Board cards -->
+      <div class="board" id="board"></div>
+
+      <!-- Villain (top) -->
+      <div class="seat p1">
+        <div class="box">
+          <div class="name"><strong>Villain</strong><span class="role" id="p1role">—</span></div>
+          <div class="cards" id="p1cards">
+            <div class="card face-down">🂠</div>
+            <div class="card face-down">🂠</div>
+          </div>
+          <div class="chips" id="p1stack">Stack: 100 bb</div>
+        </div>
+      </div>
+
+      <!-- Hero (bottom) -->
+      <div class="seat p2">
+        <div class="box">
+          <div class="name"><strong>Hero</strong><span class="role" id="p2role">—</span></div>
+          <div class="cards" id="p2cards">
+            <div class="card face-down">🂠</div>
+            <div class="card face-down">🂠</div>
+          </div>
+          <div class="chips" id="p2stack">Stack: 100 bb</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button disabled>Fold</button>
+        <button disabled>Check/Call</button>
+        <button disabled>Puntata 1/2 Pot</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = s => document.querySelector(s);
+
+    const RANKS = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
+    const SUITS = ['♣','♦','♥','♠'];
+
+    function buildDeck(){ const d=[]; for(const r of RANKS){ for(const s of SUITS){ d.push(r+s); } } return d; }
+    function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+    function cardEl(txt){ const el=document.createElement('div'); el.className='card'; el.textContent=txt; if(/♦|♥/.test(txt)) el.style.color='#ffb4c1'; return el; }
+    function faceDownEl(){ const el=document.createElement('div'); el.className='card face-down'; el.textContent='🂠'; return el; }
+
+    const btn=$('#btn');
+    const board=$('#board');
+    const p1cards=$('#p1cards');
+    const p2cards=$('#p2cards');
+    const p1role=$('#p1role');
+    const p2role=$('#p2role');
+    const buttonTag=$('#buttonTag');
+    const pot=$('#pot');
+
+    let heroFaceUp=true;    // mostriamo le carte dell'utente di default
+    let villainFaceUp=false;
+    let dealt=null;
+
+    function newHand(){
+      heroFaceUp=true; villainFaceUp=false;
+      const deck=shuffle(buildDeck());
+      const whoBtn=Math.random()<.5?'hero':'villain';
+      const hero=[deck.pop(), deck.pop()];
+      const villain=[deck.pop(), deck.pop()];
+      const theBoard=[deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
+      dealt={ whoBtn, hero, villain, board: theBoard };
+      layoutRoles();
+      renderCards();
+      renderBoard();
+      pot.textContent='Piatto: 0 bb';
+      placeDealerChip();
+    }
+
+    function layoutRoles(){
+      if(!dealt) return;
+      if(dealt.whoBtn==='hero'){ p2role.textContent='BTN / SB'; p1role.textContent='BB'; buttonTag.textContent='BTN: Hero'; }
+      else { p2role.textContent='BB'; p1role.textContent='BTN / SB'; buttonTag.textContent='BTN: Villain'; }
+    }
+
+    function renderCards(){
+      if(!dealt) return;
+      p2cards.innerHTML='';
+      if(heroFaceUp){ dealt.hero.forEach(c=>p2cards.appendChild(cardEl(c))); }
+      else { p2cards.appendChild(faceDownEl()); p2cards.appendChild(faceDownEl()); }
+
+      p1cards.innerHTML='';
+      if(villainFaceUp){ dealt.villain.forEach(c=>p1cards.appendChild(cardEl(c))); }
+      else { p1cards.appendChild(faceDownEl()); p1cards.appendChild(faceDownEl()); }
+    }
+
+    function renderBoard(){ if(!dealt) return; board.innerHTML=''; dealt.board.forEach((c,i)=>{ const el=cardEl(c); if(i>2) el.style.opacity=.95; board.appendChild(el); }); }
+
+    function placeDealerChip(){
+      btn.style.display='block';
+      const heroBtn = (dealt && dealt.whoBtn==='hero');
+      if(heroBtn){ btn.style.left='55%'; btn.style.top='72%'; }
+      else { btn.style.left='45%'; btn.style.top='26%'; }
+    }
+
+    // Handlers
+    $('#dealBtn').addEventListener('click', newHand);
+    $('#flipHero').addEventListener('click', ()=>{ heroFaceUp=!heroFaceUp; renderCards(); });
+    $('#flipVillain').addEventListener('click', ()=>{ villainFaceUp=!villainFaceUp; renderCards(); });
+
+    // Avvio automatico
+    newHand();
+  </script>
+</body>
+</html>
