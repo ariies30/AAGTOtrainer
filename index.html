@@ -1,345 +1,252 @@
-import React, { useMemo, useState } from "react";
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Poker Trainer – HU 100bb</title>
+  <style>
+    :root{
+      --bg:#0b0f17;             /* page background */
+      --card:#0f1522;           /* panels */
+      --table:#0b5e3b;          /* table felt */
+      --accent:#2fe0a3;         /* primary accent */
+      --accent-2:#ffd166;       /* secondary accent */
+      --muted:#a0aec0;          /* muted text */
+      --text:#e8edf3;           /* main text */
+      --danger:#ff5c7a;
+      --good:#2fd08a;
+      --ring: rgba(47,224,163,.35);
+      --radius: 18px;
+      --shadow: 0 10px 30px rgba(0,0,0,.25);
+      --gap: 14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif;
+      background:radial-gradient(1200px 800px at 50% -10%, #132037 0, var(--bg) 55%);
+      color:var(--text);
+      display:flex; align-items:center; justify-content:center; padding:22px;
+    }
+    .wrap{width:100%; max-width:1100px}
 
-// Poker Trainer – MVP
-// Home: filtri (tipo gioco, numero giocatori, stack) – per ora vincolati a Cash Game, Heads‑Up, 100bb
-// Dopo la scelta: pagina con simulazione tavolo (placeholder grafico + struttura pronti per estensioni)
+    /* Common UI */
+    .panel{
+      background:linear-gradient(180deg, #121a2b, var(--card));
+      border:1px solid #1e2a42; border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    h1{font-size:28px; margin:0 0 6px}
+    p{color:var(--muted); margin:0 0 18px}
+    .grid{display:grid; gap:var(--gap)}
+    .row{display:flex; gap:var(--gap); flex-wrap:wrap}
+    label{display:block; font-weight:600; margin-bottom:6px}
+    select, button{
+      appearance:none; border:1px solid #24314e; background:#0e1423; color:var(--text);
+      padding:12px 14px; border-radius:12px; font-size:15px;
+    }
+    select:disabled{opacity:.6}
+    button{cursor:pointer; border-color:#234b3b; background:linear-gradient(180deg,#0f2e28,#0e1f1a);
+      transition:.2s transform ease, .2s box-shadow ease, .2s background;
+    }
+    button.primary{background:linear-gradient(180deg,#1a7a58,#11573f); border-color:#1a7a58}
+    button:hover{transform:translateY(-1px); box-shadow:0 8px 25px var(--ring)}
+    .badged{display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border-radius:12px; background:#0e1627; border:1px dashed #24314e; color:var(--muted)}
+    .tag{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid #28486e; font-size:12px; color:#cfe6ff; background:#0b1626}
 
-export default function PokerTrainer() {
-  const [step, setStep] = useState<"filters" | "table">("filters");
-  const [gameType, setGameType] = useState<"cash" | "tournament" | "">("");
-  const [players, setPlayers] = useState<"hu" | "6max" | "9max" | "">("");
-  const [stack, setStack] = useState<string>("");
+    /* --- SETUP PAGE --- */
+    #setup{padding:22px; display:grid; gap:22px}
+    .setup-card{display:grid; gap:18px; padding:22px}
+    .setup-grid{display:grid; gap:18px; grid-template-columns:repeat(3,minmax(0,1fr))}
+    @media (max-width:900px){ .setup-grid{grid-template-columns:1fr} }
 
-  const canStart = useMemo(() => gameType === "cash" && players === "hu" && stack === "100bb", [gameType, players, stack]);
+    /* --- TABLE PAGE --- */
+    #table{display:none; padding:22px;}
 
-  return (
-    <div className="min-h-screen w-full bg-neutral-950 text-neutral-100 flex items-center justify-center p-6">
-      <div className="w-full max-w-5xl">
-        <Header step={step} onBack={() => setStep("filters")} />
+    .toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:12px}
+    .toolbar .left, .toolbar .right{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
 
-        {step === "filters" ? (
-          <Filters
-            gameType={gameType}
-            setGameType={setGameType}
-            players={players}
-            setPlayers={setPlayers}
-            stack={stack}
-            setStack={setStack}
-            onStart={() => setStep("table")}
-            canStart={canStart}
-          />
-        ) : (
-          <TableScreen
-            gameType={gameType}
-            players={players}
-            stack={stack}
-            onBack={() => setStep("filters")} />
-        )}
+    .table-wrap{position:relative; aspect-ratio:16/9; width:100%; background:transparent;}
+    .table-oval{
+      position:absolute; inset:0; margin:auto;
+      width:100%; height:100%;
+      background: radial-gradient(ellipse at center, #0d7c52 0%, #0b5e3b 60%, #084b2f 100%);
+      border-radius:50% / 40%; border:10px solid #2d190a; box-shadow:inset 0 0 0 3px #0a3e2a, 0 30px 60px rgba(0,0,0,.45);
+    }
+    .center-pot{
+      position:absolute; left:50%; top:48%; transform:translate(-50%,-50%);
+      padding:10px 14px; border-radius:12px; background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(6px);
+    }
+    .dealer{position:absolute; width:34px; height:34px; border-radius:50%; background:#fff; color:#111; display:grid; place-items:center; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.35)}
+
+    /* Seats */
+    .seat{position:absolute; width:260px; max-width:40vw}
+    .seat .box{background:rgba(0,0,0,.42); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:10px; display:grid; gap:8px}
+    .seat .name{display:flex; justify-content:space-between; align-items:center}
+    .chips{font-variant-numeric:tabular-nums; color:#e7f7ff}
+    .role{font-size:12px; color:#d1ffe6}
+
+    /* Seat positions (HU: top & bottom) */
+    .p1{left:50%; top:8%; transform:translateX(-50%);}  /* Villain (top) */
+    .p2{left:50%; bottom:8%; transform:translateX(-50%);} /* Hero (bottom) */
+
+    .cards{display:flex; gap:8px}
+    .card{
+      width:56px; height:78px; border-radius:8px; background:#0c1220; border:1px solid #1f2b44; display:grid; place-items:center; font-weight:700; font-size:18px;
+      box-shadow:0 4px 10px rgba(0,0,0,.35);
+    }
+    .card.face-down{background:repeating-linear-gradient(135deg,#0e264f,#0e264f 8px,#0a1b37 8px,#0a1b37 16px); border-color:#10356a}
+
+    .board{position:absolute; left:50%; top:28%; transform:translateX(-50%); display:flex; gap:8px}
+
+    .actions{position:absolute; left:50%; bottom:18%; transform:translateX(-50%); display:flex; gap:8px}
+
+    .note{font-size:13px; color:#a9ffde}
+
+    .link{color:#9bd5ff; text-decoration:underline dotted}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- ===================== SETUP (HOME) ===================== -->
+    <section id="setup" class="panel">
+      <div class="setup-card">
+        <header>
+          <h1>Poker Trainer</h1>
+          <p>Seleziona le opzioni per iniziare. Per adesso è attivo <strong>Cash Game → Heads Up → 100bb</strong>. Le altre voci sono segnaposto per estensioni future.</p>
+        </header>
+
+        <div class="setup-grid">
+          <div>
+            <label for="gameType">Tipo di gioco</label>
+            <select id="gameType">
+              <option value="cash" selected>Cash Game</option>
+              <option value="tournament" disabled>Torneo (presto)</option>
+            </select>
+          </div>
+          <div>
+            <label for="players">Giocatori</label>
+            <select id="players">
+              <option value="hu" selected>Heads Up</option>
+              <option value="6max" disabled>6-Max (presto)</option>
+              <option value="full" disabled>Full Ring (presto)</option>
+            </select>
+          </div>
+          <div>
+            <label for="stack">Stack personale</label>
+            <select id="stack">
+              <option value="100" selected>100bb</option>
+              <option value="50" disabled>50bb (presto)</option>
+              <option value="200" disabled>200bb (presto)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <button id="startBtn" class="primary">Inizia ▶</button>
+          <span class="badged">
+            <span class="tag">Modalità demo</span>
+            UI e logica base: nessun solver GTO incluso.
+          </span>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function Header({ step, onBack }: { step: "filters" | "table"; onBack: () => void }) {
-  return (
-    <div className="mb-6 flex items-center gap-3">
-      {step === "table" && (
-        <button
-          onClick={onBack}
-          className="rounded-xl border border-neutral-700 px-3 py-2 hover:bg-neutral-800 transition"
-          aria-label="Torna ai filtri"
-        >
-          ← Indietro
-        </button>
-      )}
-      <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Poker Trainer · Heads‑Up 100bb (MVP)</h1>
-    </div>
-  );
-}
-
-function Filters({
-  gameType,
-  setGameType,
-  players,
-  setPlayers,
-  stack,
-  setStack,
-  onStart,
-  canStart,
-}: {
-  gameType: "cash" | "tournament" | "";
-  setGameType: (v: any) => void;
-  players: "hu" | "6max" | "9max" | "";
-  setPlayers: (v: any) => void;
-  stack: string;
-  setStack: (v: any) => void;
-  onStart: () => void;
-  canStart: boolean;
-}) {
-  // Pre‑seleziona i valori consentiti per semplificare il flusso MVP
-  React.useEffect(() => {
-    if (!gameType) setGameType("cash");
-    if (!players) setPlayers("hu");
-    if (!stack) setStack("100bb");
-  }, []);
-
-  return (
-    <div className="grid gap-6">
-      <Section title="Tipo di gioco">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ChoiceCard
-            title="Cash Game"
-            active={gameType === "cash"}
-            onClick={() => setGameType("cash")}
-            badge="Disponibile"
-          />
-          <ChoiceCard
-            title="Torneo (MTT/SNG)"
-            active={false}
-            disabled
-            onClick={() => setGameType("tournament")}
-            badge="Prossimamente"
-          />
-        </div>
-      </Section>
-
-      <Section title="Numero di giocatori">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <ChoiceCard
-            title="Heads‑Up"
-            subtitle="1 vs 1"
-            active={players === "hu"}
-            onClick={() => setPlayers("hu")}
-            badge="Disponibile"
-          />
-          <ChoiceCard title="6‑Max" subtitle="Short‑handed" disabled active={false} onClick={() => setPlayers("6max")} badge="Prossimamente" />
-          <ChoiceCard title="9‑Max" subtitle="Full‑ring" disabled active={false} onClick={() => setPlayers("9max")} badge="Prossimamente" />
-        </div>
-      </Section>
-
-      <Section title="Stack effettivo">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <ChoiceCard title="100bb" active={stack === "100bb"} onClick={() => setStack("100bb")} badge="Default" />
-          <ChoiceCard title="50bb" disabled active={false} onClick={() => setStack("50bb")} badge="Prossimamente" />
-          <ChoiceCard title="200bb" disabled active={false} onClick={() => setStack("200bb")} badge="Prossimamente" />
-        </div>
-      </Section>
-
-      <div className="flex items-center justify-end gap-3">
-        <span className="text-sm text-neutral-400">Per ora: Cash · Heads‑Up · 100bb</span>
-        <button
-          disabled={!canStart}
-          onClick={onStart}
-          className={
-            "rounded-2xl px-5 py-3 text-base font-medium transition " +
-            (canStart
-              ? "bg-emerald-500 hover:bg-emerald-400 text-neutral-900 shadow"
-              : "bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-700")
-          }
-        >
-          Inizia
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5">
-      <h2 className="text-lg font-semibold mb-4">{title}</h2>
-      {children}
     </section>
-  );
-}
 
-function ChoiceCard({
-  title,
-  subtitle,
-  active,
-  disabled,
-  onClick,
-  badge,
-}: {
-  title: string;
-  subtitle?: string;
-  active: boolean;
-  disabled?: boolean;
-  onClick: () => void;
-  badge?: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={[
-        "w-full text-left rounded-2xl p-4 border transition flex items-start gap-3",
-        active
-          ? "border-emerald-500/80 bg-emerald-500/5 shadow"
-          : "border-neutral-800 bg-neutral-900/50 hover:bg-neutral-900",
-        disabled ? "opacity-50 cursor-not-allowed" : "",
-      ].join(" ")}
-    >
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-base md:text-lg font-medium">{title}</span>
-          {badge && (
-            <span className={"text-[11px] px-2 py-0.5 rounded-full border " + (active ? "border-emerald-400/60" : "border-neutral-700 text-neutral-400")}>
-              {badge}
-            </span>
-          )}
+    <!-- ===================== TABLE (SIM) ===================== -->
+    <section id="table" class="panel">
+      <div class="toolbar">
+        <div class="left">
+          <button id="backBtn">⟵ Menù</button>
+          <button id="dealBtn" class="primary">Distribuisci mano</button>
+          <button id="flipHero">Mostra/Nascondi carte Hero</button>
+          <button id="flipVillain">Mostra/Nascondi carte Villain</button>
         </div>
-        {subtitle && <p className="text-sm text-neutral-400 mt-1">{subtitle}</p>}
-      </div>
-      {active && (
-        <div className="mt-0.5 text-emerald-400 text-sm">Selezionato</div>
-      )}
-    </button>
-  );
-}
-
-function TableScreen({
-  gameType,
-  players,
-  stack,
-  onBack,
-}: {
-  gameType: string;
-  players: string;
-  stack: string;
-  onBack: () => void;
-}) {
-  return (
-    <div className="grid gap-6">
-      <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-300">
-        <Badge>Modalità: {gameType === "cash" ? "Cash Game" : "Torneo"}</Badge>
-        <Badge>Giocatori: {players === "hu" ? "Heads‑Up" : players}</Badge>
-        <Badge>Stack: {stack}</Badge>
-      </div>
-
-      <TableSurface />
-
-      <div className="flex items-center justify-between">
-        <button onClick={onBack} className="rounded-xl border border-neutral-700 px-4 py-2 hover:bg-neutral-800 transition">Modifica filtri</button>
-        <div className="flex items-center gap-3">
-          <button className="rounded-xl border border-neutral-700 px-4 py-2 hover:bg-neutral-800 transition">Nuovo spot</button>
-          <button className="rounded-xl bg-emerald-500 text-neutral-900 px-4 py-2 hover:bg-emerald-400 transition">Avvia simulazione</button>
+        <div class="right">
+          <span class="tag" id="stateTag">HU · 100bb</span>
+          <span class="tag" id="buttonTag">BTN: —</span>
         </div>
       </div>
 
-      <Hints />
-    </div>
-  );
-}
+      <div class="table-wrap">
+        <div class="table-oval"></div>
 
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-xs bg-neutral-900/60">
-      {children}
-    </span>
-  );
-}
+        <div class="center-pot" id="pot">Piatto: 0 bb</div>
+        <div class="dealer" id="btn" style="display:none">D</div>
 
-function TableSurface() {
-  return (
-    <div className="relative mx-auto aspect-[2.1/1] w-full max-w-4xl">
-      {/* Tavolo ovale */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative w-[95%] h-[88%] rounded-[48%] bg-emerald-800 shadow-[0_0_0_6px_rgba(0,0,0,0.5),inset_0_0_60px_rgba(0,0,0,0.35)] border-8 border-emerald-900">
-          {/* Pannello centrale / board */}
-          <div className="absolute inset-8 rounded-[40%] bg-emerald-700/70 border border-emerald-900/60"></div>
+        <!-- Board cards -->
+        <div class="board" id="board"></div>
 
-          {/* Carte comuni (placeholder) */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <CardBack key={i} label={i < 3 ? "Flop" : i === 3 ? "Turn" : "River"} dimmed={i > 2} />
-            ))}
+        <!-- Villain (top) -->
+        <div class="seat p1">
+          <div class="box">
+            <div class="name"><strong>Villain</strong><span class="role" id="p1role">—</span></div>
+            <div class="cards" id="p1cards">
+              <div class="card face-down">🂠</div>
+              <div class="card face-down">🂠</div>
+            </div>
+            <div class="chips" id="p1stack">Stack: 100 bb</div>
           </div>
+        </div>
 
-          {/* Dealer button */}
-          <div className="absolute left-[20%] top-[18%]">
-            <DealerButton />
+        <!-- Hero (bottom) -->
+        <div class="seat p2">
+          <div class="box">
+            <div class="name"><strong>Hero</strong><span class="role" id="p2role">—</span></div>
+            <div class="cards" id="p2cards">
+              <div class="card face-down">🂠</div>
+              <div class="card face-down">🂠</div>
+            </div>
+            <div class="chips" id="p2stack">Stack: 100 bb</div>
           </div>
-
-          {/* Villain seat (top) */}
-          <Seat position="Villain" stack="100bb" top="6%" left="50%" translate="-50% 0" hero={false} />
-
-          {/* Hero seat (bottom) */}
-          <Seat position="Hero" stack="100bb" bottom="6%" left="50%" translate="-50% 0" hero={true} />
         </div>
-      </div>
-    </div>
-  );
-}
 
-function Seat({ position, stack, top, bottom, left, translate, hero }: {
-  position: string;
-  stack: string;
-  top?: string;
-  bottom?: string;
-  left?: string;
-  translate?: string; // e.g. "-50% 0"
-  hero?: boolean;
-}) {
-  const style: React.CSSProperties = {
-    position: "absolute",
-    top,
-    bottom,
-    left,
-    transform: translate ? `translate(${translate})` : undefined,
-  };
-
-  return (
-    <div style={style} className="flex flex-col items-center gap-2">
-      <div className="flex items-center gap-3">
-        <Avatar hero={hero} />
-        <div>
-          <div className="text-sm font-semibold">{position}</div>
-          <div className="text-xs text-neutral-200/80">Stack: {stack}</div>
+        <!-- Action buttons placeholder (UI only) -->
+        <div class="actions">
+          <button disabled>Fold</button>
+          <button disabled>Check/Call</button>
+          <button disabled>Puntata 1/2 Pot</button>
         </div>
       </div>
 
-      {/* Carte private (placeholder) */}
-      <div className="flex gap-2 mt-1">
-        <CardBack label={hero ? "You" : "Opp"} />
-        <CardBack label={hero ? "You" : "Opp"} />
-      </div>
+      <div class="note" style="margin-top:12px">Suggerimento: clicca “Distribuisci mano” per randomizzare BTN/SB/BB, carte private e board.
+        Questa è una simulazione grafica; la logica di puntate/stack è volutamente minimale.</div>
+    </section>
+  </div>
 
-      {/* Chip stack (decorativo) */}
-      <div className="h-2 w-24 rounded-full bg-neutral-900/60 border border-neutral-800"></div>
-    </div>
-  );
-}
+  <script>
+    // ===== Utilities =====
+    const $ = sel => document.querySelector(sel);
 
-function Avatar({ hero }: { hero?: boolean }) {
-  return (
-    <div className={"h-10 w-10 rounded-full grid place-items-center border " + (hero ? "bg-emerald-400 text-neutral-900 border-emerald-300" : "bg-neutral-800 border-neutral-700") }>
-      {hero ? "H" : "V"}
-    </div>
-  );
-}
+    const RANKS = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
+    const SUITS = ['♣','♦','♥','♠'];
+    const isRed = s => (s === '♦' || s === '♥');
 
-function DealerButton() {
-  return (
-    <div className="h-7 w-7 rounded-full bg-amber-300 text-neutral-900 grid place-items-center text-xs font-bold shadow">D</div>
-  );
-}
+    function buildDeck(){
+      const d=[];
+      for(const r of RANKS){ for(const s of SUITS){ d.push(r+s); } }
+      return d;
+    }
+    function shuffle(a){
+      for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+      return a;
+    }
 
-function CardBack({ label, dimmed }: { label?: string; dimmed?: boolean }) {
-  return (
-    <div className={"h-14 w-10 rounded-md border grid place-items-center text-[10px] font-medium " + (dimmed ? "opacity-60 border-neutral-700 bg-neutral-800/60 text-neutral-300" : "border-neutral-600 bg-neutral-800 text-neutral-200") }>
-      {label ?? "Card"}
-    </div>
-  );
-}
+    function cardEl(txt){
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.textContent = txt;
+      if(/♦|♥/.test(txt)) el.style.color = '#ffb4c1';
+      return el;
+    }
+    function faceDownEl(){
+      const el = document.createElement('div');
+      el.className = 'card face-down';
+      el.textContent = '🂠';
+      return el;
+    }
 
-function Hints() {
-  return (
-    <div className="text-xs text-neutral-400 border-t border-neutral-800 pt-4">
-      <p>
-        Prossimi step possibili: controlli per blinds/ante, pulsanti di azione (fold/call/raise + size), random spot generator, logica range "GTO‑like" e punteggio.
-      </p>
-    </div>
-  );
-}
-
+    // ===== Views =====
+    const setup = $('#setup');
+    const table
