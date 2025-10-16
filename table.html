@@ -226,7 +226,7 @@ function faceDownEl(){
     const TU_FIXED_SEAT = 1; // TU è sempre p1 (alla sinistra del mazziere)
     let tuSeat = TU_FIXED_SEAT;
     let playerSeat = null;   // indice seat 2..9
-    let btnSeat = 7;         // punto di partenza arbitrario; ruota ogni mano
+    let btnSeat = 1 + Math.floor(Math.random()*9); // BTN di partenza casuale
 
     let tuCards = [];
     let playerCards = [];
@@ -271,15 +271,16 @@ function resetSeats(){
       seats[iPl-1].nameEl.textContent = 'player';
     }
 
-    function assignPositions(){
-      // Ordine orario: UTG, +1, LJ, HJ, MP, CO, BTN, SB, BB
-      const POS_CW = ['UTG','+1','LJ','HJ','MP','CO','BTN','SB','BB'];
-      for(let i=0;i<9;i++){
-        const seatIdx = ((btnSeat - 1) + i) % 9; // 0..8
-        const labelIdx = (6 + i) % 9;           // parte da 'BTN'
-        seats[seatIdx].posEl.textContent = POS_CW[labelIdx];
-      }
-    }
+function assignPositions(){
+  // Ordine richiesto in senso orario
+  const order = ['BTN','SB','BB','UTG','+1','LJ','HJ','MP','CO'];
+  // assegna partendo dal BTN e proseguendo seat per seat in orario
+  for (let i = 0; i < 9; i++) {
+    const seatIdx0 = ((btnSeat - 1) + i) % 9;  // indice 0..8 del seat fisico
+    seats[seatIdx0].posEl.textContent = order[i];
+  }
+}
+
 
     function placeDealerChip(){
       const pos = BTN_POS[btnSeat];
@@ -321,7 +322,7 @@ function resetSeats(){
       // Info
       const tuPos = seats[tuSeat-1].posEl.textContent;
       const plPos = seats[playerSeat-1].posEl.textContent;
-      seatInfoEl.textContent = `tu: ${tuPos} · player: ${plPos}`;
+      seatInfoEl.textContent = `tu: ${seats[0].posEl.textContent} · player: ${seats[opp-1].posEl.textContent}`;
     }
 
 function renderHands(){
