@@ -240,20 +240,22 @@ function faceDownEl(){
       return pool[Math.floor(Math.random()*pool.length)];
     }
 
-    function resetSeats(){
-      seats.forEach(s=>{
-        s.el.classList.add('inactive');
-        s.nameEl.textContent = `Seat ${s.idx}`;
-        s.cardsEl.innerHTML = '<div class="card face-down">🂠</div><div class="card face-down">🂠</div>';
-        s.chipsEl.textContent = '—';
-        if(!s.el.querySelector('.sitout')){
-          const badge = document.createElement('span');
-          badge.className='sitout';
-          badge.textContent='Sit out';
-          s.el.querySelector('.name').appendChild(badge);
-        }
-      });
+function resetSeats(){
+  seats.forEach(s=>{
+    s.el.classList.add('inactive');
+    s.nameEl.textContent = `Seat ${s.idx}`;
+    // niente carte visibili per i sit-out
+    s.cardsEl.innerHTML = '';
+    s.chipsEl.textContent = '—';
+    // aggiungi badge “Sit out” se non esiste già
+    if(!s.el.querySelector('.sitout')){
+      const badge = document.createElement('span');
+      badge.className='sitout';
+      badge.textContent='Sit out';
+      s.el.querySelector('.name').appendChild(badge);
     }
+  });
+}
 
     function setActive(iTu, iPl){
       resetSeats();
