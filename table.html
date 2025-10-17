@@ -504,32 +504,8 @@ function randomPreflop(){
 }
 
 function buildHistoryUpTo(st){
-  history = { preflop: [], flop: [], turn: [], river: [] };
-
-  // PRE-FLOP (UTG first)
-  toAct = firstActorForStreet('preflop');
-  randomPreflop();
-  if (st === 'preflop') return;
-
-  // FLOP (SB first)
-  toAct = firstActorForStreet('flop');
-  randomFlop();
-  if (st === 'flop') return;
-
-  // TURN (SB first)
-  toAct = firstActorForStreet('turn');
-  randomTurn();
-  if (st === 'turn') return;
-
-  // RIVER (SB first): semplice
-  toAct = firstActorForStreet('river');
-  const r = Math.random();
-  if (r < 0.5){
-    appendAction('river', toAct, 'bet', '1/2');
-    appendAction('river', (toAct==='tu'?'player':'tu'), Math.random()<0.65 ? 'call' : 'fold');
-  } else {
-    appendAction('river', toAct, 'check');
-  }
+  history = { preflop: [], flop: [], turn: [], river: [] }; // usiamo solo preflop
+  toAct = firstActorForStreet('preflop'); // UTG-side è first
 }
 
 
