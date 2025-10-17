@@ -134,6 +134,9 @@ overflow-y: auto;
     .p8{left:92%; top:66%; transform:translateX(-50%);}   /* Right lower */
     .p9{left:80%; bottom:2%; transform:translateX(-50%);} /* BR */
 
+    /* Board */
+    .board{position:absolute; left:50%; top:28%; transform:translateX(-50%); display:flex; gap:8px}
+    .board .card{ width:60px; height:86px }
 
 #table{ padding:22px; position:relative; }
 
@@ -180,6 +183,9 @@ overflow-y: auto;
 
       <div class="history" id="history">
     <div><strong>Preflop:</strong> —</div>
+    <div><strong>Flop:</strong> —</div>
+    <div><strong>Turn:</strong> —</div>
+    <div><strong>River:</strong> —</div>
   </div>
 
     <div class="table-wrap">
@@ -300,7 +306,7 @@ const historyEl   = document.getElementById('history');
 const actionsEl   = document.getElementById('actions');
 
 // Stato per street & history
-const STREETS = ['preflop'];
+const STREETS = ['preflop','flop','turn','river'];
 let street = 'preflop';
 let history = { preflop: [], flop: [], turn: [], river: [] };
 let toAct = 'tu'; // 'tu' | 'player'
@@ -405,7 +411,6 @@ function firstActorForStreet(st){
 
 
 function newHand(){
-  actionsEl.innerHTML = '';
   // Ruota BTN in senso orario
   btnSeat = (btnSeat % 9) + 1;
 
@@ -422,10 +427,10 @@ function newHand(){
   playerCards = [deck.pop(), deck.pop()];
   theBoard = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
 
-  street = 'preflop';
-buildHistoryUpTo(street);
-streetTagEl.textContent = 'Street: PREFLOP';
-
+  // Street random + storia
+  street = pickRandomStreet();
+  buildHistoryUpTo(street);
+  renderStreetBoard(street);
 
   // UI
   renderHands();
@@ -474,9 +479,19 @@ function renderHands(){
 
 function renderBoard(){
   boardEl.innerHTML='';
+  // mostra solo le community fino allo street corrente
+  const n = street==='preflop' ? 0 : street==='flop' ? 3 : street==='turn' ? 4 : 5;
+  theBoard.slice(0,n).forEach((c)=>{ const el=cardEl(c); boardEl.appendChild(el); });
 }
 
-
+    function pickRandomStreet(){
+  // Bias: 10% pre, 55% flop, 30% turn, 5% river (scenari decisionali)
+  const r = Math.random();
+  if(r < 0.10) return 'preflop';
+  if(r < 0.65) return 'flop';
+  if(r < 0.95) return 'turn';
+  return 'river';
+}
 
 function appendAction(st, who, type, size=''){
   history[st].push({who,type,size});
@@ -504,22 +519,89 @@ function randomPreflop(){
   }
 }
 
+function randomFlop(){
+  const actor = firstActorForStreet('flop');               // postflop inizia SB-side
+  const opp   = (actor === 'tu') ? 'player' : 'tu';
+  toAct = actor;
 
+  const r = Math.random();
+  if (r < 0.4){
+    appendAction('flop', actor, 'bet', '1/2');
+    appendAction('flop', opp,   Math.random()<0.7 ? 'call' : 'fold');
+    toAct = actor;
+  } else if (r < 0.7){
+    appendAction('flop', actor, 'check');
+    appendAction('flop', opp,   Math.random()<0.6 ? 'bet' : 'check', Math.random()<0.6 ? '1/3' : '');
+    toAct = (history.flop.at(-1)?.type === 'bet') ? actor : opp;
+  } else {
+    appendAction('flop', actor, 'check');
+    appendAction('flop', opp,   'check');
+    toAct = actor;
+  }
+}
+
+function randomTurn(){
+  const actor = firstActorForStreet('turn');               // anche turn segue ordinamento postflop
+  const opp   = (actor === 'tu') ? 'player' : 'tu';
+  toAct = actor;
+
+  const r = Math.random();
+  if (r < 0.45){
+    appendAction('turn', actor, 'bet', '2/3');
+    appendAction('turn', opp,   Math.random()<0.65 ? 'call' : 'fold');
+    toAct = actor;
+  } else if (r < 0.75){
+    appendAction('turn', actor, 'check');
+    appendAction('turn', opp,   Math.random()<0.6 ? 'bet' : 'check', Math.random()<0.6 ? '1/2' : '');
+    toAct = (history.turn.at(-1)?.type === 'bet') ? actor : opp;
+  } else {
+    appendAction('turn', actor, 'check');
+    toAct = opp;
+  }
+}
 
 
 function buildHistoryUpTo(st){
-  history = { preflop: [], flop: [], turn: [], river: [] }; // mantengo struttura, ma useremo solo preflop
-  // Parte chi parla per primo: UTG-side
-  toAct = firstActorForStreet('preflop');
-}
+  history = { preflop: [], flop: [], turn: [], river: [] };
 
+  // PRE-FLOP (UTG first)
+  toAct = firstActorForStreet('preflop');
+  randomPreflop();
+  if (st === 'preflop') return;
+
+  // FLOP (SB first)
+  toAct = firstActorForStreet('flop');
+  randomFlop();
+  if (st === 'flop') return;
+
+  // TURN (SB first)
+  toAct = firstActorForStreet('turn');
+  randomTurn();
+  if (st === 'turn') return;
+
+  // RIVER (SB first): semplice
+  toAct = firstActorForStreet('river');
+  const r = Math.random();
+  if (r < 0.5){
+    appendAction('river', toAct, 'bet', '1/2');
+    appendAction('river', (toAct==='tu'?'player':'tu'), Math.random()<0.65 ? 'call' : 'fold');
+  } else {
+    appendAction('river', toAct, 'check');
+  }
+}
 
 
 function renderHistoryPanel(){
   const fmt = (arr)=> arr.length? arr.map(a=>`${a.who}: ${a.type}${a.size?` ${a.size}`:''}`).join(' · ') : '—';
-  historyEl.innerHTML = `<div><strong>Preflop:</strong> ${fmt(history.preflop)}</div>`;
+  historyEl.innerHTML = `
+    <div><strong>Preflop:</strong> ${fmt(history.preflop)}</div>
+    <div><strong>Flop:</strong> ${fmt(history.flop)}</div>
+    <div><strong>Turn:</strong> ${fmt(history.turn)}</div>
+    <div><strong>River:</strong> ${fmt(history.river)}</div>
+  `;
 }
 
+function renderStreetBoard(st){ street = st; renderBoard(); streetTagEl.textContent = `Street: ${street.toUpperCase()}`; }
 
 function lastAggressorOnStreet(st){
   for(let i=history[st].length-1;i>=0;i--){
@@ -552,28 +634,25 @@ function lastIsCallClosing(st){
   return aggressor && last.who !== aggressor;
 }
 function endOfStreetReached(){
-  // SOLO PREFLOP: si chiude quando c’è un call sull’ultima aggressione
-  // oppure quando succede limp -> check.
-  const arr = history.preflop;
-  if (arr.length < 1) return false;
-
-  // call che chiude
-  if (lastIsCallClosing('preflop')) return true;
-
-  // limp -> check
-  const len = arr.length;
-  if (len >= 2 && arr[len-2].type === 'limp' && arr[len-1].type === 'check') return true;
-
-  return false;
+  return bothChecked(street) || lastIsCallClosing(street);
 }
-
-function nextStreetName(cur){ return null; } // ⬅️ mai più altre street
-
+function nextStreetName(cur){
+  if (cur === 'preflop') return 'flop';
+  if (cur === 'flop')    return 'turn';
+  if (cur === 'turn')    return 'river';
+  return null;
+}
 function advanceStreet(){
-  // ⬅️ in preflop-only, “avanzare” significa chiudere la mano
-  actionsEl.innerHTML = '<span class="tag">Preflop completo</span>';
+  const nxt = nextStreetName(street);
+  if (!nxt){
+    actionsEl.innerHTML = '<span class="tag">Showdown</span>';
+    return;
+  }
+  renderStreetBoard(nxt);              // cambia street + board
+  toAct = firstActorForStreet(street); // street è stata aggiornata da renderStreetBoard
+  renderHistoryPanel();
+  renderActions();
 }
-
 function maybeAdvanceStreet(){
   if (endOfStreetReached()){
     advanceStreet();
@@ -581,7 +660,6 @@ function maybeAdvanceStreet(){
   }
   return false;
 }
-
 
 // Etichetta "3-bet/4-bet/5-bet" in base al numero di raises già avvenuti
 function nextReRaiseLabel(){
@@ -608,74 +686,48 @@ function addBtn(text, cls, onClick){
 function renderActions(){
   actionsEl.innerHTML = '';
   const actor = toAct; // 'tu' | 'player'
-  const aggressor = lastAggressorOnStreet('preflop');
-  const facingRaise = !!(aggressor && aggressor !== actor);   // sto subendo una raise (o re-raise)?
-  const raises = history.preflop.filter(a=>a.type==='raise').length;
+  const aggressor = lastAggressorOnStreet(street);
+  const facingBet = !!(aggressor && aggressor !== actor); // sto subendo una bet/raise?
 
-  function endHand(msg='Preflop completo'){
-    actionsEl.innerHTML = `<span class="tag">${msg}</span>`;
-  }
-
+  // Helper per append e poi decidere se avanzare/continuare
   function doAndNext(who, type, size){
-    appendAction('preflop', who, type, size);
+    appendAction(street, who, type, size);
     renderHistoryPanel();
 
-    // Fine immediata su fold
-    if (type === 'fold'){ endHand('Mano terminata (fold preflop)'); return; }
+    // fine mano se fold
+    if (type === 'fold'){
+      actionsEl.innerHTML = '<span class="tag">Mano terminata</span>';
+      return;
+    }
 
-    // Chiusura preflop su call che chiude o su limp->check
+    // Se dopo l'azione la street è chiusa (check-check o call), avanza
     if (maybeAdvanceStreet()) return;
 
-    // Passa il turno all’altro
+    // Altrimenti passa la mano all'altro
     toAct = (who === 'tu') ? 'player' : 'tu';
     renderActions();
   }
 
-  // === TURNI ===
+  // === TURNO DI "tu" ===
   if (actor === 'tu'){
-    if (!facingRaise){
-      // Nessuna raise pendente → apertura o over-limp spot (semplificato)
-      addBtn('Fold', 'warn',   ()=> doAndNext('tu','fold'));
-      addBtn('Limp', '',       ()=> doAndNext('tu','limp'));          // opzionale: UTG limp
-      addBtn('Open 2.5bb','primary', ()=> doAndNext('tu','raise','2.5bb'));
+    if (facingBet){
+      // Sto affrontando una bet/raise dell'avversario: Call / Fold / (Re-raise se permesso)
+      addBtn('Call',  'primary', ()=> doAndNext('tu','call'));
+      addBtn('Fold',  'warn',    ()=> doAndNext('tu','fold'));
+      if (canReRaise()){
+        addBtn(nextReRaiseLabel(), '', ()=> doAndNext('tu','raise','2x'));
+      }
     } else {
-      // Sto affrontando open/3bet/4bet
-      addBtn('Call', 'primary', ()=> doAndNext('tu','call'));
-      addBtn('Fold', 'warn',    ()=> doAndNext('tu','fold'));
-      if (raises === 1) addBtn('3-bet', '', ()=> doAndNext('tu','raise','3x'));
-      if (raises === 2) addBtn('4-bet', '', ()=> doAndNext('tu','raise','2x'));
-      if (raises === 3) addBtn('5-bet', '', ()=> doAndNext('tu','raise','2x'));
+      // Nessuna bet pendente: Check o Bet (apertura)
+      addBtn('Check', '', ()=>{
+        doAndNext('tu','check');
+      });
+      addBtn('Bet 1/2','primary', ()=>{
+        doAndNext('tu','bet','1/2');
+      });
     }
     return;
   }
-
-  // === PLAYER (AI semplice coerente) ===
-  const r = Math.random();
-  if (!facingRaise){
-    // Risposta a nulla: può foldare, limpare o aprire
-    if (r < 0.25) doAndNext('player','fold');
-    else if (r < 0.45) doAndNext('player','limp');
-    else doAndNext('player','raise','2.5bb'); // open
-  } else {
-    // Risposta a open/3bet/4bet
-    if (raises === 1){ // facing open
-      if (r < 0.55) doAndNext('player','call');
-      else if (r < 0.80) doAndNext('player','raise','3x'); // 3-bet
-      else doAndNext('player','fold');
-    } else if (raises === 2){ // facing 3-bet
-      if (r < 0.55) doAndNext('player','call');
-      else if (r < 0.75) doAndNext('player','raise','2x'); // 4-bet
-      else doAndNext('player','fold');
-    } else if (raises === 3){ // facing 4-bet
-      if (r < 0.55) doAndNext('player','call');            // chiude preflop
-      else if (r < 0.70) doAndNext('player','raise','2x'); // 5-bet
-      else doAndNext('player','fold');
-    } else {
-      doAndNext('player','call'); // sicurezza
-    }
-  }
-}
-
 
   // === TURNO DEL "player" (semplice AI coerente con le regole) ===
   // Simuliamo risposte: se subisce bet/raise, può Call/Fold/4-bet (fino a 5-bet totale),
