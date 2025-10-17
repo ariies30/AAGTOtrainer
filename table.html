@@ -308,13 +308,14 @@ function faceDownEl(){
 }
 
 
-// ===== OVALE CHIP (stesso centro del tavolo, leggermente più interno) =====
 const CHIP_OVAL = {
-  cx: 50,   // centro in %
-  cy: 50,   // centro in %
-  rx: 38,   // raggio orizzontale (% del contenitore) - un filo più piccolo del tavolo
-  ry: 28    // raggio verticale (% del contenitore)
+  cx: 50,
+  cy: 52,
+  rx: 33,   // 🔽 raggio orizzontale ridotto → più interno
+  ry: 24    // 🔽 raggio verticale ridotto → più vicino al centro
 };
+
+
 
 // Angoli (in gradi) per i 9 seat orientati come sul tavolo (in senso orario)
 // 90° = top, 0° = destra, 180° = sinistra, 270°/−90° = bottom
