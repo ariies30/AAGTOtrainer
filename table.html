@@ -385,6 +385,31 @@ function assignPositions(){
       if (bbPos) { bbEl.style.left = bbPos.left; bbEl.style.top = bbPos.top; }
     }
 
+    // ===== ORDINE DI AZIONE =====
+// Ordine completo 9-max in senso orario a partire da BTN:
+const PREFLOP_ORDER  = ['UTG','+1','LJ','HJ','MP','CO','BTN','SB','BB']; // preflop inizia UTG
+const POSTFLOP_ORDER = ['SB','BB','UTG','+1','LJ','HJ','MP','CO','BTN']; // postflop inizia SB
+
+function positionOf(who){
+  const seatIdx = (who === 'tu' ? tuSeat : playerSeat) - 1;
+  return seats[seatIdx].posEl.textContent; // es. 'BTN','SB','BB','UTG','+1','LJ','HJ','MP','CO'
+}
+
+// Ritorna 'tu' o 'player' a seconda di chi viene prima nell'ordine della street
+function firstActorForStreet(st){
+  const tuPos = positionOf('tu');
+  const plPos = positionOf('player');
+  const order = (st === 'preflop') ? PREFLOP_ORDER : POSTFLOP_ORDER;
+
+  const ai = order.indexOf(tuPos);
+  const bi = order.indexOf(plPos);
+
+  // fallback robusto: se non trovati, lascia 'tu' first
+  if (ai === -1 || bi === -1) return 'tu';
+  return (ai < bi) ? 'tu' : 'player';
+}
+
+
 function newHand(){
   // Ruota BTN in senso orario
   btnSeat = (btnSeat % 9) + 1;
@@ -473,39 +498,98 @@ function appendAction(st, who, type, size=''){
 }
 
 function randomPreflop(){
+  const actor = firstActorForStreet('preflop');            // chi deve parlare per primo (UTG-side)
+  const opp   = (actor === 'tu') ? 'player' : 'tu';
+  toAct = actor;
+
   const r = Math.random();
-  if(r < 0.33){ appendAction('preflop','tu','raise','3bb'); appendAction('preflop','player','call'); toAct = 'tu'; }
-  else if(r < 0.66){ appendAction('preflop','player','raise','3bb'); appendAction('preflop','tu','call'); toAct = 'player'; }
-  else { appendAction('preflop','tu','limp'); appendAction('preflop','player','check'); toAct = 'tu'; }
+  // esempi plausibili e simmetrici, rispettando chi inizia:
+  if (r < 0.33){
+    appendAction('preflop', actor, 'raise', '3bb');
+    appendAction('preflop', opp,   'call');
+    toAct = actor; // dopo il call, azione torna all'aggressore per semplicità nello spot corrente
+  } else if (r < 0.66){
+    appendAction('preflop', actor, 'limp');
+    appendAction('preflop', opp,   'check');
+    toAct = actor;
+  } else {
+    appendAction('preflop', actor, 'raise', '2.5bb');
+    appendAction('preflop', opp,   Math.random()<0.5 ? 'fold' : 'call');
+    toAct = actor;
+  }
 }
 
 function randomFlop(){
+  const actor = firstActorForStreet('flop');               // postflop inizia SB-side
+  const opp   = (actor === 'tu') ? 'player' : 'tu';
+  toAct = actor;
+
   const r = Math.random();
-  if(r < 0.4){ appendAction('flop','tu','bet','1/2'); appendAction('flop','player','call'); toAct = 'tu'; }
-  else if(r < 0.7){ appendAction('flop','player','bet','1/3'); appendAction('flop','tu','call'); toAct = 'player'; }
-  else { appendAction('flop','tu','check'); appendAction('flop','player','check'); toAct = 'tu'; }
+  if (r < 0.4){
+    appendAction('flop', actor, 'bet', '1/2');
+    appendAction('flop', opp,   Math.random()<0.7 ? 'call' : 'fold');
+    toAct = actor;
+  } else if (r < 0.7){
+    appendAction('flop', actor, 'check');
+    appendAction('flop', opp,   Math.random()<0.6 ? 'bet' : 'check', Math.random()<0.6 ? '1/3' : '');
+    toAct = (history.flop.at(-1)?.type === 'bet') ? actor : opp;
+  } else {
+    appendAction('flop', actor, 'check');
+    appendAction('flop', opp,   'check');
+    toAct = actor;
+  }
 }
 
 function randomTurn(){
+  const actor = firstActorForStreet('turn');               // anche turn segue ordinamento postflop
+  const opp   = (actor === 'tu') ? 'player' : 'tu';
+  toAct = actor;
+
   const r = Math.random();
-  if(r < 0.45){ appendAction('turn','player','bet','2/3'); toAct = 'tu'; }
-  else if(r < 0.75){ appendAction('turn','tu','bet','1/2'); toAct = 'player'; }
-  else { appendAction('turn','tu','check'); toAct = 'player'; }
+  if (r < 0.45){
+    appendAction('turn', actor, 'bet', '2/3');
+    appendAction('turn', opp,   Math.random()<0.65 ? 'call' : 'fold');
+    toAct = actor;
+  } else if (r < 0.75){
+    appendAction('turn', actor, 'check');
+    appendAction('turn', opp,   Math.random()<0.6 ? 'bet' : 'check', Math.random()<0.6 ? '1/2' : '');
+    toAct = (history.turn.at(-1)?.type === 'bet') ? actor : opp;
+  } else {
+    appendAction('turn', actor, 'check');
+    toAct = opp;
+  }
 }
+
 
 function buildHistoryUpTo(st){
   history = { preflop: [], flop: [], turn: [], river: [] };
+
+  // PRE-FLOP (UTG first)
+  toAct = firstActorForStreet('preflop');
   randomPreflop();
-  if(st==='preflop') return;
+  if (st === 'preflop') return;
+
+  // FLOP (SB first)
+  toAct = firstActorForStreet('flop');
   randomFlop();
-  if(st==='flop') return;
+  if (st === 'flop') return;
+
+  // TURN (SB first)
+  toAct = firstActorForStreet('turn');
   randomTurn();
-  if(st==='turn') return;
-  // river semplice
+  if (st === 'turn') return;
+
+  // RIVER (SB first): semplice
+  toAct = firstActorForStreet('river');
   const r = Math.random();
-  if(r < 0.5){ appendAction('river','player','bet','1/2'); toAct='tu'; }
-  else { appendAction('river','tu','check'); toAct='player'; }
+  if (r < 0.5){
+    appendAction('river', toAct, 'bet', '1/2');
+    appendAction('river', (toAct==='tu'?'player':'tu'), Math.random()<0.65 ? 'call' : 'fold');
+  } else {
+    appendAction('river', toAct, 'check');
+  }
 }
+
 
 function renderHistoryPanel(){
   const fmt = (arr)=> arr.length? arr.map(a=>`${a.who}: ${a.type}${a.size?` ${a.size}`:''}`).join(' · ') : '—';
