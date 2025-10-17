@@ -40,7 +40,6 @@ html, body {
 
 body {
   display: flex;
-    overflow: auto;  
   align-items: center;
   justify-content: center;
   background: radial-gradient(1200px 800px at 50% -10%, #132037 0, var(--bg) 55%);
@@ -57,9 +56,18 @@ body {
   flex-direction: column;
   justify-content: space-between;
 }
-#table {
-  transform: scale(0.9);           /* ⬅️ riduce al 90% */
-  transform-origin: top center;    /* ⬅️ scala dall’alto al centro */
+
+#table{
+  height:100vh;        /* il pannello occupa tutta la viewport */
+  overflow:hidden;     /* evita tagli/scroll interni */
+  position:relative;
+}
+#table { margin: 8px 0; }
+    .scale-wrap{
+  width:100%;
+  height: calc(100% / var(--scale));  /* <-- compensa la scala */
+  transform: scale(var(--scale));
+  transform-origin: top center;       /* scala dall’alto */
 }
 
     .panel{background:linear-gradient(180deg, #121a2b, var(--card)); border:1px solid #1e2a42; border-radius:var(--radius); box-shadow:var(--shadow);}
