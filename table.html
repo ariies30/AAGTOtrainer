@@ -192,6 +192,7 @@ overflow-y: auto;
   text-align: center;
   background: #fff;
   z-index: 5;
+  transform: translate(-50%, -50%); /* centra la chip sul punto calcolato */
 }
 
 .chip-sb { background: #9fd4ff; }
@@ -307,18 +308,36 @@ function faceDownEl(){
 }
 
 
-    // Coordinate per i chip BTN/SB/BB vicino al bordo dell'ovale
-    const BTN_POS = {
-      1: {left:'28%', top:'64%'},
-      2: {left:'18%', top:'60%'},
-      3: {left:'16%', top:'32%'},
-      4: {left:'28%', top:'20%'},
-      5: {left:'50%', top:'18%'},
-      6: {left:'72%', top:'20%'},
-      7: {left:'84%', top:'32%'},
-      8: {left:'82%', top:'60%'},
-      9: {left:'72%', top:'64%'}
-    };
+// ===== OVALE CHIP (stesso centro del tavolo, leggermente più interno) =====
+const CHIP_OVAL = {
+  cx: 50,   // centro in %
+  cy: 50,   // centro in %
+  rx: 38,   // raggio orizzontale (% del contenitore) - un filo più piccolo del tavolo
+  ry: 28    // raggio verticale (% del contenitore)
+};
+
+// Angoli (in gradi) per i 9 seat orientati come sul tavolo (in senso orario)
+// 90° = top, 0° = destra, 180° = sinistra, 270°/−90° = bottom
+const SEAT_ANGLE = {
+  1: 220,  // p1  bottom-left
+  2: 200,  // p2  left-lower
+  3: 150,  // p3  left-upper
+  4: 120,  // p4  upper-left
+  5:  90,  // p5  top center
+  6:  60,  // p6  upper-right
+  7:  30,  // p7  right-upper
+  8: 340,  // p8  right-lower
+  9: 320   // p9  bottom-right
+};
+
+// Converte un angolo (°) in coordinate % su ellisse centrata
+function ovalPos(angleDeg){
+  const t = angleDeg * Math.PI / 180;
+  const x = CHIP_OVAL.cx + CHIP_OVAL.rx * Math.cos(t);
+  const y = CHIP_OVAL.cy + CHIP_OVAL.ry * Math.sin(t);
+  return { left: x.toFixed(2) + '%', top: y.toFixed(2) + '%' };
+}
+
 
     // Riferimenti ai 9 seat
     const seats = $$('.seat').map((el,idx)=>({
@@ -409,27 +428,38 @@ function assignPositions(){
 }
 
 
-    function placeDealerChip(){
-      const pos = BTN_POS[btnSeat];
-      if(pos){ btnEl.style.left = pos.left; btnEl.style.top = pos.top; }
-    }
+function placeDealerChip(){
+  const ang = SEAT_ANGLE[btnSeat];     // chip del BTN sulla corona ovale
+  if (!ang && ang !== 0) return;
+  const p = ovalPos(ang);
+  btnEl.style.left = p.left;
+  btnEl.style.top  = p.top;
+}
+
 function placeBlindChips(){
-  const sbSeat = btnSeat % 9 + 1;
-  const bbSeat = (sbSeat % 9) + 1;
-  const sbPos = BTN_POS[sbSeat];
-  const bbPos = BTN_POS[bbSeat];
+  const sbSeat = btnSeat % 9 + 1;          // SB = prossimo al BTN
+  const bbSeat = (sbSeat % 9) + 1;         // BB = successivo
 
-  if (sbPos) { sbEl.style.left = sbPos.left; sbEl.style.top = sbPos.top; }
-  if (bbPos) { bbEl.style.left = bbPos.left; bbEl.style.top = bbPos.top; }
+  const sbAng = SEAT_ANGLE[sbSeat];
+  const bbAng = SEAT_ANGLE[bbSeat];
+  if (sbAng !== undefined){
+    const p = ovalPos(sbAng);
+    sbEl.style.left = p.left;
+    sbEl.style.top  = p.top;
+  }
+  if (bbAng !== undefined){
+    const p = ovalPos(bbAng);
+    bbEl.style.left = p.left;
+    bbEl.style.top  = p.top;
+  }
 
-  // ⬇️ testo sulle chip: già postate preflop
+  // Testo sulle chip (puoi tenere SB/BB se preferisci)
   sbEl.textContent = '0.5bb';
   bbEl.textContent = '1bb';
-
-  // (opzionale) tooltip
   sbEl.title = 'Small Blind: 0.5bb';
   bbEl.title = 'Big Blind: 1bb';
 }
+
 
 
     // ===== ORDINE DI AZIONE =====
