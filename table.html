@@ -32,9 +32,32 @@
       --bg:#0b0f17; --card:#0f1522; --table:#0b5e3b; --accent:#2fe0a3; --accent-2:#ffd166; --muted:#a0aec0; --text:#e8edf3; --radius:18px; --ring: rgba(47,224,163,.35); --shadow:0 10px 30px rgba(0,0,0,.25); --gap:14px;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif; background:radial-gradient(1200px 800px at 50% -10%, #132037 0, var(--bg) 55%); color:var(--text); display:flex; align-items:center; justify-content:center; padding:22px}
-    .wrap{width:100%; max-width:1200px}
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden; /* ⬅️ elimina la scrollbar */
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(1200px 800px at 50% -10%, #132037 0, var(--bg) 55%);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Inter, Arial, sans-serif;
+  padding: 0;             /* ⬅️ toglie 22px di padding che spingevano fuori la pagina */
+}
+
+.wrap {
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;            /* ⬅️ riempie verticalmente lo spazio disponibile */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+    #table { margin: 8px 0; }
+
     .panel{background:linear-gradient(180deg, #121a2b, var(--card)); border:1px solid #1e2a42; border-radius:var(--radius); box-shadow:var(--shadow);}
     .tag{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid #28486e; font-size:12px; color:#cfe6ff; background:#0b1626}
     button{appearance:none; border:1px solid #24314e; background:#0e1423; color:#e8edf3; padding:12px 14px; border-radius:12px; font-size:15px; cursor:pointer; border-color:#234b3b; background:linear-gradient(180deg,#0f2e28,#0e1f1a); transition:.2s transform ease, .2s box-shadow ease}
