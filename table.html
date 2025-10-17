@@ -510,14 +510,12 @@ function buildHistoryUpTo(st){
 
 
 function renderHistoryPanel(){
-  const fmt = (arr)=> arr.length? arr.map(a=>`${a.who}: ${a.type}${a.size?` ${a.size}`:''}`).join(' · ') : '—';
-  historyEl.innerHTML = `
-    <div><strong>Preflop:</strong> ${fmt(history.preflop)}</div>
-    <div><strong>Flop:</strong> ${fmt(history.flop)}</div>
-    <div><strong>Turn:</strong> ${fmt(history.turn)}</div>
-    <div><strong>River:</strong> ${fmt(history.river)}</div>
-  `;
+  const fmt = (arr)=> arr.length
+    ? arr.map(a=>`${a.who}: ${a.type}${a.size?` ${a.size}`:''}`).join(' · ')
+    : '—';
+  historyEl.innerHTML = `<div><strong>Preflop:</strong> ${fmt(history.preflop)}</div>`;
 }
+
     
     // === Street helpers ===
 function lastAction(st){
