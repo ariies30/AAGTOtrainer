@@ -540,26 +540,31 @@ function lastIsCallClosing(st){
   // chiude se il call è dell'altro rispetto all'ultimo aggressore
   return aggressor && last.who !== aggressor;
 }
+    
 function endOfStreetReached(){
-  return bothChecked(street) || lastIsCallClosing(street);
+  // Preflop si chiude su:
+  // - call che chiude l'ultima aggressione
+  // - sequenza limp -> check
+  const arr = history.preflop;
+  if (!arr.length) return false;
+
+  // call che chiude
+  if (lastIsCallClosing('preflop')) return true;
+
+  // limp -> check
+  const len = arr.length;
+  if (len >= 2 && arr[len-2].type === 'limp' && arr[len-1].type === 'check') return true;
+
+  return false;
 }
-function nextStreetName(cur){
-  if (cur === 'preflop') return 'flop';
-  if (cur === 'flop')    return 'turn';
-  if (cur === 'turn')    return 'river';
-  return null;
-}
+    
+function nextStreetName(){ return null; } // mai più altre street
+
 function advanceStreet(){
-  const nxt = nextStreetName(street);
-  if (!nxt){
-    actionsEl.innerHTML = '<span class="tag">Showdown</span>';
-    return;
-  }
-  renderStreetBoard(nxt);              // cambia street + board
-  toAct = firstActorForStreet(street); // street è stata aggiornata da renderStreetBoard
-  renderHistoryPanel();
-  renderActions();
+  // in preflop-only, "avanzare" significa chiudere il training della mano
+  actionsEl.innerHTML = '<span class="tag">Preflop completo</span>';
 }
+
 function maybeAdvanceStreet(){
   if (endOfStreetReached()){
     advanceStreet();
@@ -567,6 +572,7 @@ function maybeAdvanceStreet(){
   }
   return false;
 }
+
 
 // Etichetta "3-bet/4-bet/5-bet" in base al numero di raises già avvenuti
 function nextReRaiseLabel(){
