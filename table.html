@@ -69,7 +69,19 @@ overflow-y: auto;
 
     /* Table */
     .table-wrap{position:relative; aspect-ratio:16/9; width:100%;}
-    .table-oval{position:absolute; inset:12% 16%; margin:auto; width:auto; height:auto; background: radial-gradient(ellipse at center, #0d7c52 0%, #0b5e3b 60%, #084b2f 100%); border-radius:50% / 40%; border:10px solid #2d190a; box-shadow:inset 0 0 0 3px #0a3e2a, 0 30px 60px rgba(0,0,0,.45)}
+  .table-oval {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 78%;               /* leggermente più largo */
+  height: 60%;              /* più alto, forma ovale regolare */
+  background: radial-gradient(ellipse at center, #0d7c52 0%, #0b5e3b 70%, #084b2f 100%);
+  border-radius: 50% / 48%; /* ovale, senza estremità tagliate */
+  border: 12px solid #2d190a;
+  box-shadow: inset 0 0 0 3px #0a3e2a, 0 30px 60px rgba(0,0,0,0.45);
+}
+
     .center-pot{position:absolute; left:50%; top:48%; transform:translate(-50%,-50%); padding:10px 14px; border-radius:12px; background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(6px)}
 
     /* Mazziere fisso (in basso al centro, fuori dall'ovale) */
