@@ -475,12 +475,8 @@ function renderHands(){
 }
 
 
-function renderBoard(){
-  boardEl.innerHTML='';
-  // mostra solo le community fino allo street corrente
-  const n = street==='preflop' ? 0 : street==='flop' ? 3 : street==='turn' ? 4 : 5;
-  theBoard.slice(0,n).forEach((c)=>{ const el=cardEl(c); boardEl.appendChild(el); });
-}
+function renderBoard(){ boardEl.innerHTML=''; }
+
 
     function pickRandomStreet(){
   // Bias: 10% pre, 55% flop, 30% turn, 5% river (scenari decisionali)
