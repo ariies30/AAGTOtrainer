@@ -79,6 +79,7 @@ overflow-y: auto;
 
     /* Chip generiche */
     .chip {position:absolute; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.35); border:1px solid rgba(0,0,0,.2); color:#111; z-index:5}
+    .chip { font-size: 12px; padding: 0 4px; }
     .chip-btn { background:#fff; }
     .chip-sb { background:#9fd4ff; }
     .chip-bb { background:#ff9da0; }
@@ -307,6 +308,8 @@ const STREETS = ['preflop'];
 let street = 'preflop';
 let history = { preflop: [] };
 let toAct = 'tu'; // 'tu' | 'player'
+let pot = 0; // piatto in bb
+
 
 
     // Stato corrente
@@ -373,14 +376,24 @@ function assignPositions(){
       const pos = BTN_POS[btnSeat];
       if(pos){ btnEl.style.left = pos.left; btnEl.style.top = pos.top; }
     }
-    function placeBlindChips(){
-      const sbSeat = btnSeat % 9 + 1;
-      const bbSeat = (sbSeat % 9) + 1;
-      const sbPos = BTN_POS[sbSeat];
-      const bbPos = BTN_POS[bbSeat];
-      if (sbPos) { sbEl.style.left = sbPos.left; sbEl.style.top = sbPos.top; }
-      if (bbPos) { bbEl.style.left = bbPos.left; bbEl.style.top = bbPos.top; }
-    }
+function placeBlindChips(){
+  const sbSeat = btnSeat % 9 + 1;
+  const bbSeat = (sbSeat % 9) + 1;
+  const sbPos = BTN_POS[sbSeat];
+  const bbPos = BTN_POS[bbSeat];
+
+  if (sbPos) { sbEl.style.left = sbPos.left; sbEl.style.top = sbPos.top; }
+  if (bbPos) { bbEl.style.left = bbPos.left; bbEl.style.top = bbPos.top; }
+
+  // ⬇️ testo sulle chip: già postate preflop
+  sbEl.textContent = '0.5bb';
+  bbEl.textContent = '1bb';
+
+  // (opzionale) tooltip
+  sbEl.title = 'Small Blind: 0.5bb';
+  bbEl.title = 'Big Blind: 1bb';
+}
+
 
     // ===== ORDINE DI AZIONE =====
 // Ordine completo 9-max in senso orario a partire da BTN:
@@ -433,7 +446,8 @@ streetTagEl.textContent = 'Street: PREFLOP';
   // UI
   renderHands();
   renderBoard();
-  potEl.textContent = 'Piatto: 0 bb';
+pot = 1.5; // 0.5 + 1
+potEl.textContent = `Piatto: ${pot} bb`;
 placeDealerChip();
 placeBlindChips();
 
