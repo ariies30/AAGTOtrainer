@@ -35,7 +35,15 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif; background:radial-gradient(1200px 800px at 50% -10%, #132037 0, var(--bg) 55%); color:var(--text); display:flex; align-items:center; justify-content:center; padding:22px}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif;
+  color:var(--text);
+  overflow:hidden;           /* ⬅️ niente scrollbars */
+  padding:0;                 /* ⬅️ lo sfondo lo mette #fit */
+  background:none;           /* ⬅️ spostiamo il bg su #fit */
+}
+
     .wrap{width:100%; max-width:1200px}
     .panel{background:linear-gradient(180deg, #121a2b, var(--card)); border:1px solid #1e2a42; border-radius:var(--radius); box-shadow:var(--shadow);}
     .tag{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid #28486e; font-size:12px; color:#cfe6ff; background:#0b1626}
@@ -136,7 +144,14 @@
     .board{position:absolute; left:50%; top:28%; transform:translateX(-50%); display:flex; gap:8px}
     .board .card{ width:60px; height:86px }
 
-#table{ padding:22px; position:relative; }
+#table{
+  padding:22px;
+  position:relative;
+  width:1200px;     /* aggiunto */
+  height:700px;     /* aggiunto */
+  transform-origin: top left; /* aggiunto */
+}
+
 
     /* Pulsanti in riga, tag sotto */
 .btn-row{
@@ -159,9 +174,30 @@
   justify-content:flex-start;
 }
 
+    /* Fullscreen container che centra e gestisce lo sfondo */
+#fit{
+  position:fixed;
+  inset:0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background: radial-gradient(1200px 800px at 50% -10%, #132037 0, var(--bg) 55%);
+}
+
+/* (Facoltativo) micro-tuning su schermi molto piccoli */
+@media (max-width: 420px){
+  .toolbar{ padding:8px 10px; gap:6px; }
+  .btn-row{ gap:6px; }
+  .tags-row{ gap:6px; }
+  .action-bar{ gap:6px; bottom:4%; }
+  .seat .box{ padding:6px; gap:4px; }
+}
+
+
   </style>
 </head>
 <body>
+    <div id="fit">
   <div class="wrap panel" id="table">
 <div class="toolbar">
   <div class="left">
@@ -170,6 +206,7 @@
       <button id="dealBtn" class="primary">Distribuisci mano</button>
       <button id="flipPlayer">Mostra/Nascondi carte "player"</button>
     </div>
+  </div>
 
     <!-- ⬇️ tag info a SINISTRA, sotto i pulsanti -->
     <div class="tags-row">
@@ -177,7 +214,6 @@
       <span class="tag" id="streetTag">Street: —</span>
     </div>
   </div>
-  <!-- ✅ niente .right -->
 </div>
 
       <div class="history" id="history">
@@ -575,6 +611,25 @@ function renderActions(){
     placeDealerChip();
     placeBlindChips();
     newHand();
+    // === FIT SCALER ===
+(function(){
+  const DESIGN_W = 1200;
+  const DESIGN_H = 700;
+  const MARGIN   = 12; // margine anti-scroll
+
+  function fit() {
+    const vw = window.innerWidth  - MARGIN*2;
+    const vh = window.innerHeight - MARGIN*2;
+    const scale = Math.min(vw / DESIGN_W, vh / DESIGN_H);
+
+    const table = document.getElementById('table');
+    table.style.transform = `scale(${scale})`;
+  }
+
+  window.addEventListener('resize', fit);
+  fit();
+})();
+
   </script>
 </body>
 </html>
