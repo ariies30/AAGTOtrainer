@@ -183,9 +183,6 @@ overflow-y: auto;
 
       <div class="history" id="history">
     <div><strong>Preflop:</strong> —</div>
-    <div><strong>Flop:</strong> —</div>
-    <div><strong>Turn:</strong> —</div>
-    <div><strong>River:</strong> —</div>
   </div>
 
     <div class="table-wrap">
@@ -306,7 +303,7 @@ const historyEl   = document.getElementById('history');
 const actionsEl   = document.getElementById('actions');
 
 // Stato per street & history
-const STREETS = ['preflop','flop','turn','river'];
+const STREETS = ['preflop'];
 let street = 'preflop';
 let history = { preflop: [], flop: [], turn: [], river: [] };
 let toAct = 'tu'; // 'tu' | 'player'
@@ -427,10 +424,10 @@ function newHand(){
   playerCards = [deck.pop(), deck.pop()];
   theBoard = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
 
-  // Street random + storia
-  street = pickRandomStreet();
-  buildHistoryUpTo(street);
-  renderStreetBoard(street);
+  street = 'preflop';
+buildHistoryUpTo(street);
+streetTagEl.textContent = 'Street: PREFLOP';
+
 
   // UI
   renderHands();
@@ -479,9 +476,6 @@ function renderHands(){
 
 function renderBoard(){
   boardEl.innerHTML='';
-  // mostra solo le community fino allo street corrente
-  const n = street==='preflop' ? 0 : street==='flop' ? 3 : street==='turn' ? 4 : 5;
-  theBoard.slice(0,n).forEach((c)=>{ const el=cardEl(c); boardEl.appendChild(el); });
 }
 
     function pickRandomStreet(){
@@ -562,44 +556,18 @@ function randomTurn(){
 
 
 function buildHistoryUpTo(st){
-  history = { preflop: [], flop: [], turn: [], river: [] };
-
-  // PRE-FLOP (UTG first)
+  history = { preflop: [], flop: [], turn: [], river: [] }; // mantengo struttura, ma useremo solo preflop
+  // Parte chi parla per primo: UTG-side
   toAct = firstActorForStreet('preflop');
-  randomPreflop();
-  if (st === 'preflop') return;
-
-  // FLOP (SB first)
-  toAct = firstActorForStreet('flop');
-  randomFlop();
-  if (st === 'flop') return;
-
-  // TURN (SB first)
-  toAct = firstActorForStreet('turn');
-  randomTurn();
-  if (st === 'turn') return;
-
-  // RIVER (SB first): semplice
-  toAct = firstActorForStreet('river');
-  const r = Math.random();
-  if (r < 0.5){
-    appendAction('river', toAct, 'bet', '1/2');
-    appendAction('river', (toAct==='tu'?'player':'tu'), Math.random()<0.65 ? 'call' : 'fold');
-  } else {
-    appendAction('river', toAct, 'check');
-  }
 }
+
 
 
 function renderHistoryPanel(){
   const fmt = (arr)=> arr.length? arr.map(a=>`${a.who}: ${a.type}${a.size?` ${a.size}`:''}`).join(' · ') : '—';
-  historyEl.innerHTML = `
-    <div><strong>Preflop:</strong> ${fmt(history.preflop)}</div>
-    <div><strong>Flop:</strong> ${fmt(history.flop)}</div>
-    <div><strong>Turn:</strong> ${fmt(history.turn)}</div>
-    <div><strong>River:</strong> ${fmt(history.river)}</div>
-  `;
+  historyEl.innerHTML = `<div><strong>Preflop:</strong> ${fmt(history.preflop)}</div>`;
 }
+
 
 function renderStreetBoard(st){ street = st; renderBoard(); streetTagEl.textContent = `Street: ${street.toUpperCase()}`; }
 
