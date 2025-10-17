@@ -424,10 +424,11 @@ function newHand(){
   playerCards = [deck.pop(), deck.pop()];
   theBoard = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
 
-  // Street random + storia
-  street = pickRandomStreet();
-  buildHistoryUpTo(street);
-  renderStreetBoard(street);
+// Solo preflop
+street = 'preflop';
+buildHistoryUpTo(street);
+streetTagEl.textContent = 'Street: PREFLOP';
+
 
   // UI
   renderHands();
