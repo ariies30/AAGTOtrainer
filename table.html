@@ -599,74 +599,76 @@ function addBtn(text, cls, onClick){
 function renderActions(){
   actionsEl.innerHTML = '';
   const actor = toAct; // 'tu' | 'player'
-  const aggressor = lastAggressorOnStreet(street);
-  const facingBet = !!(aggressor && aggressor !== actor); // sto subendo una bet/raise?
+  const aggressor = lastAggressorOnStreet('preflop');
+  const facingRaise = !!(aggressor && aggressor !== actor); // sto subendo open/3bet/4bet...
+  const raises = history.preflop.filter(a=>a.type==='raise').length;
 
-  // Helper per append e poi decidere se avanzare/continuare
+  function endHand(msg='Preflop completo'){
+    actionsEl.innerHTML = `<span class="tag">${msg}</span>`;
+  }
+
+  function addBtn(text, cls, onClick){
+    const b = document.createElement('button');
+    b.className = 'btn'+(cls?` ${cls}`:'');
+    b.textContent = text;
+    b.addEventListener('click', onClick);
+    actionsEl.appendChild(b);
+  }
+
   function doAndNext(who, type, size){
-    appendAction(street, who, type, size);
+    appendAction('preflop', who, type, size);
     renderHistoryPanel();
 
-    // fine mano se fold
-    if (type === 'fold'){
-      actionsEl.innerHTML = '<span class="tag">Mano terminata</span>';
-      return;
-    }
-
-    // Se dopo l'azione la street è chiusa (check-check o call), avanza
+    if (type === 'fold'){ endHand('Mano terminata (fold preflop)'); return; }
     if (maybeAdvanceStreet()) return;
 
-    // Altrimenti passa la mano all'altro
     toAct = (who === 'tu') ? 'player' : 'tu';
     renderActions();
   }
 
   // === TURNO DI "tu" ===
   if (actor === 'tu'){
-    if (facingBet){
-      // Sto affrontando una bet/raise dell'avversario: Call / Fold / (Re-raise se permesso)
-      addBtn('Call',  'primary', ()=> doAndNext('tu','call'));
-      addBtn('Fold',  'warn',    ()=> doAndNext('tu','fold'));
-      if (canReRaise()){
-        addBtn(nextReRaiseLabel(), '', ()=> doAndNext('tu','raise','2x'));
-      }
+    if (!facingRaise){
+      // Apertura spot: Fold / Limp / Open
+      addBtn('Fold', 'warn', ()=> doAndNext('tu','fold'));
+      addBtn('Limp', '',      ()=> doAndNext('tu','limp'));
+      addBtn('Open 2.5bb', 'primary', ()=> doAndNext('tu','raise','2.5bb'));
     } else {
-      // Nessuna bet pendente: Check o Bet (apertura)
-      addBtn('Check', '', ()=>{
-        doAndNext('tu','check');
-      });
-      addBtn('Bet 1/2','primary', ()=>{
-        doAndNext('tu','bet','1/2');
-      });
+      // Sto affrontando open/3bet/4bet...
+      addBtn('Call', 'primary', ()=> doAndNext('tu','call'));
+      addBtn('Fold', 'warn',    ()=> doAndNext('tu','fold'));
+      if (raises === 1) addBtn('3-bet', '', ()=> doAndNext('tu','raise','3x'));
+      if (raises === 2) addBtn('4-bet', '', ()=> doAndNext('tu','raise','2x'));
+      if (raises === 3) addBtn('5-bet', '', ()=> doAndNext('tu','raise','2x'));
     }
     return;
   }
 
-  // === TURNO DEL "player" (semplice AI coerente con le regole) ===
-  // Simuliamo risposte: se subisce bet/raise, può Call/Fold/4-bet (fino a 5-bet totale),
-  // altrimenti può Check/Bet.
+  // === TURNO DEL "player" (AI minimale coerente) ===
   const r = Math.random();
-
-  if (facingBet){
-    if (canReRaise() && r < 0.20){
-      // Re-raise (3/4/5-bet)
-      doAndNext('player','raise','2x');
-    } else if (r < 0.70){
-      // Call più frequente
-      doAndNext('player','call');
-    } else {
-      // Fold
-      doAndNext('player','fold');
-    }
+  if (!facingRaise){
+    if (r < 0.25) doAndNext('player','fold');
+    else if (r < 0.45) doAndNext('player','limp');
+    else doAndNext('player','raise','2.5bb'); // open
   } else {
-    // Nessuna bet pendente
-    if (r < 0.50){
-      doAndNext('player','check');
+    if (raises === 1){ // facing open
+      if (r < 0.55) doAndNext('player','call');
+      else if (r < 0.80) doAndNext('player','raise','3x'); // 3-bet
+      else doAndNext('player','fold');
+    } else if (raises === 2){ // facing 3-bet
+      if (r < 0.55) doAndNext('player','call');
+      else if (r < 0.75) doAndNext('player','raise','2x'); // 4-bet
+      else doAndNext('player','fold');
+    } else if (raises === 3){ // facing 4-bet
+      if (r < 0.55) doAndNext('player','call');            // chiude preflop
+      else if (r < 0.70) doAndNext('player','raise','2x'); // 5-bet
+      else doAndNext('player','fold');
     } else {
-      doAndNext('player','bet','1/3');
+      doAndNext('player','call'); // sicurezza
     }
   }
 }
+
 
 
 
