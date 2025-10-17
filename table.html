@@ -610,6 +610,71 @@ function lastAggressorOnStreet(st){
   return null;
 }
 
+    // === Street helpers ===
+function lastAction(st){
+  const arr = history[st];
+  return arr.length ? arr[arr.length-1] : null;
+}
+function raisesOnStreet(st){
+  // conta solo 'raise' (il primo 'bet' non è raise)
+  return history[st].filter(a => a.type === 'raise').length;
+}
+function bothChecked(st){
+  const arr = history[st];
+  return arr.length >= 2 && arr[arr.length-1].type === 'check' && arr[arr.length-2].type === 'check';
+}
+function lastIsCallClosing(st){
+  // heads-up: se c'è stata una bet/raise e l'altro fa 'call', la street è chiusa
+  const arr = history[st];
+  if (arr.length < 1) return false;
+  const last = arr[arr.length-1];
+  if (last.type !== 'call') return false;
+  const aggressor = lastAggressorOnStreet(st);
+  // chiude se il call è dell'altro rispetto all'ultimo aggressore
+  return aggressor && last.who !== aggressor;
+}
+function endOfStreetReached(){
+  return bothChecked(street) || lastIsCallClosing(street);
+}
+function nextStreetName(cur){
+  if (cur === 'preflop') return 'flop';
+  if (cur === 'flop')    return 'turn';
+  if (cur === 'turn')    return 'river';
+  return null;
+}
+function advanceStreet(){
+  const nxt = nextStreetName(street);
+  if (!nxt){
+    actionsEl.innerHTML = '<span class="tag">Showdown</span>';
+    return;
+  }
+  renderStreetBoard(nxt);              // cambia street + board
+  toAct = firstActorForStreet(street); // street è stata aggiornata da renderStreetBoard
+  renderHistoryPanel();
+  renderActions();
+}
+function maybeAdvanceStreet(){
+  if (endOfStreetReached()){
+    advanceStreet();
+    return true;
+  }
+  return false;
+}
+
+// Etichetta "3-bet/4-bet/5-bet" in base al numero di raises già avvenuti
+function nextReRaiseLabel(){
+  const rc = raisesOnStreet(street); // 0 dopo una semplice bet
+  if (rc === 0) return 'Raise (3-bet)';
+  if (rc === 1) return 'Raise (4-bet)';
+  if (rc === 2) return 'Raise (5-bet)';
+  return 'Raise'; // oltre 5-bet: fallback
+}
+// Limite: consenti fino alla 5-bet (cioè max 3 re-raise oltre il primo raise)
+function canReRaise(){
+  return raisesOnStreet(street) < 3;
+}
+
+
 function addBtn(text, cls, onClick){
   const b = document.createElement('button');
   b.className = 'btn'+(cls?` ${cls}`:'');
@@ -619,35 +684,77 @@ function addBtn(text, cls, onClick){
 }
 
 function renderActions(){
-  actionsEl.innerHTML='';
+  actionsEl.innerHTML = '';
   const actor = toAct; // 'tu' | 'player'
-  if(actor==='tu'){
-    const aggressor = lastAggressorOnStreet(street);
-    if(aggressor && aggressor!=='tu'){
-      addBtn('Call',  'primary', ()=>{ appendAction(street,'tu','call'); toAct='player'; renderHistoryPanel(); renderActions(); });
-      addBtn('Raise', '',        ()=>{ appendAction(street,'tu','raise','2x'); toAct='player'; renderHistoryPanel(); renderActions(); });
-      addBtn('Fold',  'warn',    ()=>{ appendAction(street,'tu','fold'); actionsEl.innerHTML='<span class="tag">Mano terminata</span>'; renderHistoryPanel(); });
-    } else {
-      addBtn('Check', '',        ()=>{ appendAction(street,'tu','check'); toAct='player'; renderHistoryPanel(); renderActions(); });
-      addBtn('Bet 1/2','primary',()=>{ appendAction(street,'tu','bet','1/2'); toAct='player'; renderHistoryPanel(); renderActions(); });
-    }
-  } else {
-    // semplice simulazione avversario
-    const aggressor = lastAggressorOnStreet(street);
-    const r = Math.random();
-    if(aggressor && aggressor!=='player'){
-      if(r<0.5){ appendAction(street,'player','call'); }
-      else if(r<0.75){ appendAction(street,'player','raise','2x'); }
-      else { appendAction(street,'player','fold'); actionsEl.innerHTML='<span class="tag">Mano terminata</span>'; renderHistoryPanel(); return; }
-      toAct='tu';
-    } else {
-      if(r<0.5){ appendAction(street,'player','check'); toAct='tu'; }
-      else { appendAction(street,'player','bet','1/3'); toAct='tu'; }
-    }
+  const aggressor = lastAggressorOnStreet(street);
+  const facingBet = !!(aggressor && aggressor !== actor); // sto subendo una bet/raise?
+
+  // Helper per append e poi decidere se avanzare/continuare
+  function doAndNext(who, type, size){
+    appendAction(street, who, type, size);
     renderHistoryPanel();
+
+    // fine mano se fold
+    if (type === 'fold'){
+      actionsEl.innerHTML = '<span class="tag">Mano terminata</span>';
+      return;
+    }
+
+    // Se dopo l'azione la street è chiusa (check-check o call), avanza
+    if (maybeAdvanceStreet()) return;
+
+    // Altrimenti passa la mano all'altro
+    toAct = (who === 'tu') ? 'player' : 'tu';
     renderActions();
   }
+
+  // === TURNO DI "tu" ===
+  if (actor === 'tu'){
+    if (facingBet){
+      // Sto affrontando una bet/raise dell'avversario: Call / Fold / (Re-raise se permesso)
+      addBtn('Call',  'primary', ()=> doAndNext('tu','call'));
+      addBtn('Fold',  'warn',    ()=> doAndNext('tu','fold'));
+      if (canReRaise()){
+        addBtn(nextReRaiseLabel(), '', ()=> doAndNext('tu','raise','2x'));
+      }
+    } else {
+      // Nessuna bet pendente: Check o Bet (apertura)
+      addBtn('Check', '', ()=>{
+        doAndNext('tu','check');
+      });
+      addBtn('Bet 1/2','primary', ()=>{
+        doAndNext('tu','bet','1/2');
+      });
+    }
+    return;
+  }
+
+  // === TURNO DEL "player" (semplice AI coerente con le regole) ===
+  // Simuliamo risposte: se subisce bet/raise, può Call/Fold/4-bet (fino a 5-bet totale),
+  // altrimenti può Check/Bet.
+  const r = Math.random();
+
+  if (facingBet){
+    if (canReRaise() && r < 0.20){
+      // Re-raise (3/4/5-bet)
+      doAndNext('player','raise','2x');
+    } else if (r < 0.70){
+      // Call più frequente
+      doAndNext('player','call');
+    } else {
+      // Fold
+      doAndNext('player','fold');
+    }
+  } else {
+    // Nessuna bet pendente
+    if (r < 0.50){
+      doAndNext('player','check');
+    } else {
+      doAndNext('player','bet','1/3');
+    }
+  }
 }
+
 
 
 
