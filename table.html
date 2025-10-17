@@ -7,12 +7,14 @@
   <style>
     /* History panel (alto-dx) */
 .history{
-  position:absolute; right:10px; top:10px;
+  position:absolute; right:12px; top:40px;
   background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.08);
   padding:10px 12px; border-radius:10px;
   width:min(32%, 360px); font-size:12px; line-height:1.35;
-  backdrop-filter: blur(6px)
+  backdrop-filter: blur(6px);
+  z-index:999;
 }
+
 .history strong{color:#e6f7ff}
 .history div+div{margin-top:6px}
 
@@ -135,20 +137,7 @@
     .board .card{ width:60px; height:86px }
 
 #table{ padding:22px; position:relative; }
-    #history{
-  position:absolute;
-  top:40px;
-  right:12px;
-  background:rgba(0,0,0,.35);
-  border:1px solid rgba(255,255,255,.08);
-  padding:10px 12px;
-  border-radius:10px;
-  width:min(32%, 360px);
-  font-size:12px;
-  line-height:1.35;
-  backdrop-filter:blur(6px);
-  z-index:999;
-}
+
     /* Pulsanti in riga, tag sotto */
 .btn-row{
   display:flex;
@@ -223,16 +212,7 @@
 <div class="action-bar" id="actions"></div>
 
 
-      <!-- ===== 9 SEATS ===== -->
-      <div class="seat p1" id="seat1"><div class="box"><div class="name"><strong class="label-name">Seat 1</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
-      <div class="seat p2" id="seat2"><div class="box"><div class="name"><strong class="label-name">Seat 2</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
-      <div class="seat p3" id="seat3"><div class="box"><div class="name"><strong class="label-name">Seat 3</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
-      <div class="seat p4" id="seat4"><div class="box"><div class="name"><strong class="label-name">Seat 4</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
-      <div class="seat p5" id="seat5"><div class="box"><div class="name"><strong class="label-name">Seat 5</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
-      <div class="seat p6" id="seat6"><div class="box"><div class="name"><strong class="label-name">Seat 6</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
-      <div class="seat p7" id="seat7"><div class="box"><div class="name"><strong class="label-name">Seat 7</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
-      <div class="seat p8" id="seat8"><div class="box"><div class="name"><strong class="label-name">Seat 8</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
-      <div class="seat p9" id="seat9"><div class="box"><div class="name"><strong class="label-name">Seat 9</strong><span class="pos-tag">—</span></div><div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div><div class="chips">—</div></div></div>
+<div class="cards"><div class="card face-down">🂠</div><div class="card face-down">🂠</div></div>
 
     </div>
   </div>
@@ -424,7 +404,9 @@ function newHand(){
   renderHands();
   renderBoard();
   potEl.textContent = 'Piatto: 0 bb';
-  placeAllChips();
+placeDealerChip();
+placeBlindChips();
+
 
   // Info
   const tuPos = seats[tuSeat-1].posEl.textContent;
