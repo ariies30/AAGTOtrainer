@@ -477,16 +477,6 @@ function renderHands(){
 
 function renderBoard(){ boardEl.innerHTML=''; }
 
-
-    function pickRandomStreet(){
-  // Bias: 10% pre, 55% flop, 30% turn, 5% river (scenari decisionali)
-  const r = Math.random();
-  if(r < 0.10) return 'preflop';
-  if(r < 0.65) return 'flop';
-  if(r < 0.95) return 'turn';
-  return 'river';
-}
-
 function appendAction(st, who, type, size=''){
   history[st].push({who,type,size});
 }
@@ -512,48 +502,6 @@ function randomPreflop(){
     toAct = actor;
   }
 }
-
-function randomFlop(){
-  const actor = firstActorForStreet('flop');               // postflop inizia SB-side
-  const opp   = (actor === 'tu') ? 'player' : 'tu';
-  toAct = actor;
-
-  const r = Math.random();
-  if (r < 0.4){
-    appendAction('flop', actor, 'bet', '1/2');
-    appendAction('flop', opp,   Math.random()<0.7 ? 'call' : 'fold');
-    toAct = actor;
-  } else if (r < 0.7){
-    appendAction('flop', actor, 'check');
-    appendAction('flop', opp,   Math.random()<0.6 ? 'bet' : 'check', Math.random()<0.6 ? '1/3' : '');
-    toAct = (history.flop.at(-1)?.type === 'bet') ? actor : opp;
-  } else {
-    appendAction('flop', actor, 'check');
-    appendAction('flop', opp,   'check');
-    toAct = actor;
-  }
-}
-
-function randomTurn(){
-  const actor = firstActorForStreet('turn');               // anche turn segue ordinamento postflop
-  const opp   = (actor === 'tu') ? 'player' : 'tu';
-  toAct = actor;
-
-  const r = Math.random();
-  if (r < 0.45){
-    appendAction('turn', actor, 'bet', '2/3');
-    appendAction('turn', opp,   Math.random()<0.65 ? 'call' : 'fold');
-    toAct = actor;
-  } else if (r < 0.75){
-    appendAction('turn', actor, 'check');
-    appendAction('turn', opp,   Math.random()<0.6 ? 'bet' : 'check', Math.random()<0.6 ? '1/2' : '');
-    toAct = (history.turn.at(-1)?.type === 'bet') ? actor : opp;
-  } else {
-    appendAction('turn', actor, 'check');
-    toAct = opp;
-  }
-}
-
 
 function buildHistoryUpTo(st){
   history = { preflop: [], flop: [], turn: [], river: [] };
@@ -594,16 +542,7 @@ function renderHistoryPanel(){
     <div><strong>River:</strong> ${fmt(history.river)}</div>
   `;
 }
-
-function renderStreetBoard(st){ street = st; renderBoard(); streetTagEl.textContent = `Street: ${street.toUpperCase()}`; }
-
-function lastAggressorOnStreet(st){
-  for(let i=history[st].length-1;i>=0;i--){
-    if(['bet','raise'].includes(history[st][i].type)) return history[st][i].who;
-  }
-  return null;
-}
-
+    
     // === Street helpers ===
 function lastAction(st){
   const arr = history[st];
