@@ -429,37 +429,40 @@ function assignPositions(){
 }
 
 
-function placeDealerChip(){
-  const ang = SEAT_ANGLE[btnSeat];     // chip del BTN sulla corona ovale
-  if (!ang && ang !== 0) return;
-  const p = ovalPos(ang);
-  btnEl.style.left = p.left;
-  btnEl.style.top  = p.top;
-}
+function placeRoleChips(){
+  // Trova i seat attuali che mostrano i ruoli
+  const btnIdx = seatIndexByPosTag('BTN');
+  const sbIdx  = seatIndexByPosTag('SB');
+  const bbIdx  = seatIndexByPosTag('BB');
 
-function placeBlindChips(){
-  const sbSeat = btnSeat % 9 + 1;          // SB = prossimo al BTN
-  const bbSeat = (sbSeat % 9) + 1;         // BB = successivo
+  // Posiziona D
+  if (btnIdx && SEAT_ANGLE[btnIdx] !== undefined){
+    const p = ovalPos(SEAT_ANGLE[btnIdx]); // usa l’ovale interno che hai già definito
+    btnEl.style.left = p.left;
+    btnEl.style.top  = p.top;
+    btnEl.textContent = 'D';
+    btnEl.title = 'Button';
+  }
 
-  const sbAng = SEAT_ANGLE[sbSeat];
-  const bbAng = SEAT_ANGLE[bbSeat];
-  if (sbAng !== undefined){
-    const p = ovalPos(sbAng);
+  // Posiziona SB
+  if (sbIdx && SEAT_ANGLE[sbIdx] !== undefined){
+    const p = ovalPos(SEAT_ANGLE[sbIdx]);
     sbEl.style.left = p.left;
     sbEl.style.top  = p.top;
-  }
-  if (bbAng !== undefined){
-    const p = ovalPos(bbAng);
-    bbEl.style.left = p.left;
-    bbEl.style.top  = p.top;
+    sbEl.textContent = '0.5bb';   // sempre mostra 0.5bb
+    sbEl.title = 'Small Blind: 0.5bb';
   }
 
-  // Testo sulle chip (puoi tenere SB/BB se preferisci)
-  sbEl.textContent = '0.5bb';
-  bbEl.textContent = '1bb';
-  sbEl.title = 'Small Blind: 0.5bb';
-  bbEl.title = 'Big Blind: 1bb';
+  // Posiziona BB
+  if (bbIdx && SEAT_ANGLE[bbIdx] !== undefined){
+    const p = ovalPos(SEAT_ANGLE[bbIdx]);
+    bbEl.style.left = p.left;
+    bbEl.style.top  = p.top;
+    bbEl.textContent = '1bb';     // sempre mostra 1bb
+    bbEl.title = 'Big Blind: 1bb';
+  }
 }
+
 
 
 
@@ -472,6 +475,11 @@ function positionOf(who){
   const seatIdx = (who === 'tu' ? tuSeat : playerSeat) - 1;
   return seats[seatIdx].posEl.textContent; // es. 'BTN','SB','BB','UTG','+1','LJ','HJ','MP','CO'
 }
+    
+function seatIndexByPosTag(tag){
+  const s = seats.find(seat => seat.posEl.textContent === tag);
+  return s ? s.idx : null; // 1..9 oppure null
+}    
 
 // Ritorna 'tu' o 'player' a seconda di chi viene prima nell'ordine della street
 function firstActorForStreet(st){
@@ -516,8 +524,7 @@ streetTagEl.textContent = 'Street: PREFLOP';
   renderBoard();
 pot = 1.5; // 0.5 + 1
 potEl.textContent = `Piatto: ${pot} bb`;
-placeDealerChip();
-placeBlindChips();
+placeRoleChips();
 
 
   // Info
