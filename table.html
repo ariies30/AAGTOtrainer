@@ -432,6 +432,39 @@ function assignPositions(){
       if (sbPos) { sbEl.style.left = sbPos.left; sbEl.style.top = sbPos.top; }
       if (bbPos) { bbEl.style.left = bbPos.left; bbEl.style.top = bbPos.top; }
     }
+    
+    // === Autoscale per adattare tutto allo schermo ===
+function autoscale() {
+  const table = document.getElementById('table');
+  const wrap  = table.querySelector('.scale-wrap');
+  if (!wrap) return;
+
+  // Reset per misurare dimensioni naturali
+  wrap.style.transform = 'scale(1)';
+  wrap.style.height = 'auto';
+
+  // Misure naturali del contenuto
+  const contentW = wrap.scrollWidth;
+  const contentH = wrap.scrollHeight;
+
+  // Spazio disponibile
+  const maxW = table.clientWidth;
+  const maxH = table.clientHeight;
+
+  // Fattore di scala per entrare in entrambi (senza superare 1)
+  const s = Math.min(maxW / contentW, maxH / contentH, 1);
+
+  // Applica scala e compensa l’altezza logica (così non “taglia” sotto)
+  wrap.style.transform = `scale(${s})`;
+  wrap.style.height = (contentH / s) + 'px';
+}
+
+// Riesegui su resize e al primo layout
+window.addEventListener('resize', () => {
+  requestAnimationFrame(autoscale);
+});
+requestAnimationFrame(autoscale);
+
 
 function newHand(){
   // Ruota BTN in senso orario
@@ -468,6 +501,7 @@ function newHand(){
   streetTagEl.textContent = `Street: ${street.toUpperCase()}`;
   renderHistoryPanel();
   renderActions();
+  requestAnimationFrame(autoscale);
 }
 
 
