@@ -430,12 +430,10 @@ function assignPositions(){
 
 
 function placeRoleChips(){
-  // Trova i seat che hanno attualmente i ruoli (le pos-tag le scrive assignPositions)
   const btnIdx = seatIndexByPosTag('BTN');
   const sbIdx  = seatIndexByPosTag('SB');
   const bbIdx  = seatIndexByPosTag('BB');
 
-  // BTN -> chip "D"
   if (btnIdx && SEAT_ANGLE[btnIdx] !== undefined){
     const p = ovalPos(SEAT_ANGLE[btnIdx]);
     btnEl.style.left = p.left;
@@ -444,7 +442,6 @@ function placeRoleChips(){
     btnEl.title = 'Button';
   }
 
-  // SB -> chip "0.5bb"
   if (sbIdx && SEAT_ANGLE[sbIdx] !== undefined){
     const p = ovalPos(SEAT_ANGLE[sbIdx]);
     sbEl.style.left = p.left;
@@ -453,7 +450,6 @@ function placeRoleChips(){
     sbEl.title = 'Small Blind: 0.5bb';
   }
 
-  // BB -> chip "1bb"
   if (bbIdx && SEAT_ANGLE[bbIdx] !== undefined){
     const p = ovalPos(SEAT_ANGLE[bbIdx]);
     bbEl.style.left = p.left;
@@ -462,6 +458,7 @@ function placeRoleChips(){
     bbEl.title = 'Big Blind: 1bb';
   }
 }
+
 
 
 
@@ -475,6 +472,12 @@ function positionOf(who){
   const seatIdx = (who === 'tu' ? tuSeat : playerSeat) - 1;
   return seats[seatIdx].posEl.textContent; // es. 'BTN','SB','BB','UTG','+1','LJ','HJ','MP','CO'
 }
+
+function seatIndexByPosTag(tag){
+  const s = seats.find(seat => seat.posEl.textContent === tag);
+  return s ? s.idx : null; // 1..9 oppure null
+}
+
 
 function seatIndexByPosTag(tag){
   const s = seats.find(seat => seat.posEl.textContent === tag);
@@ -604,6 +607,15 @@ function renderHistoryPanel(){
     : '—';
   historyEl.innerHTML = `<div><strong>Preflop:</strong> ${fmt(history.preflop)}</div>`;
 }
+
+function lastAggressorOnStreet(st){
+  const arr = history[st] || [];
+  for (let i = arr.length - 1; i >= 0; i--){
+    if (arr[i].type === 'bet' || arr[i].type === 'raise') return arr[i].who;
+  }
+  return null;
+}
+
 
     
     // === Street helpers ===
