@@ -430,82 +430,6 @@ function assignPositions(){
 
 
 function placeRoleChips(){
-  const btnIdx = seatIndexByPosTag('BTN');
-  const sbIdx  = seatIndexByPosTag('SB');
-  const bbIdx  = seatIndexByPosTag('BB');
-
-  if (btnIdx && SEAT_ANGLE[btnIdx] !== undefined){
-    const p = ovalPos(SEAT_ANGLE[btnIdx]);
-    btnEl.style.left = p.left;
-    btnEl.style.top  = p.top;
-    btnEl.textContent = 'D';
-    btnEl.title = 'Button';
-  }
-
-  if (sbIdx && SEAT_ANGLE[sbIdx] !== undefined){
-    const p = ovalPos(SEAT_ANGLE[sbIdx]);
-    sbEl.style.left = p.left;
-    sbEl.style.top  = p.top;
-    sbEl.textContent = '0.5bb';
-    sbEl.title = 'Small Blind: 0.5bb';
-  }
-
-  if (bbIdx && SEAT_ANGLE[bbIdx] !== undefined){
-    const p = ovalPos(SEAT_ANGLE[bbIdx]);
-    bbEl.style.left = p.left;
-    bbEl.style.top  = p.top;
-    bbEl.textContent = '1bb';
-    bbEl.title = 'Big Blind: 1bb';
-  }
-}
-
-
-
-
-
-    // ===== ORDINE DI AZIONE =====
-// Ordine completo 9-max in senso orario a partire da BTN:
-const PREFLOP_ORDER  = ['UTG','+1','LJ','HJ','MP','CO','BTN','SB','BB']; // preflop inizia UTG
-const POSTFLOP_ORDER = ['SB','BB','UTG','+1','LJ','HJ','MP','CO','BTN']; // postflop inizia SB
-
-function positionOf(who){
-  const seatIdx = (who === 'tu' ? tuSeat : playerSeat) - 1;
-  return seats[seatIdx].posEl.textContent; // es. 'BTN','SB','BB','UTG','+1','LJ','HJ','MP','CO'
-}
-    
-function seatIndexByPosTag(tag){
-  const s = seats.find(seat => seat.posEl.textContent === tag);
-  return s ? s.idx : null; // 1..9 oppure null
-}
-
-    
-function seatIndexByPosTag(tag){
-  const s = seats.find(seat => seat.posEl.textContent === tag);
-  return s ? s.idx : null; // 1..9 oppure null
-}
-
-
-function seatIndexByPosTag(tag){
-  const s = seats.find(seat => seat.posEl.textContent === tag);
-  return s ? s.idx : null; // 1..9, oppure null se non trovato
-}
-
-
-// Ritorna 'tu' o 'player' a seconda di chi viene prima nell'ordine della street
-function firstActorForStreet(st){
-  const tuPos = positionOf('tu');
-  const plPos = positionOf('player');
-  const order = (st === 'preflop') ? PREFLOP_ORDER : POSTFLOP_ORDER;
-
-  const ai = order.indexOf(tuPos);
-  const bi = order.indexOf(plPos);
-
-  // fallback robusto: se non trovati, lascia 'tu' first
-  if (ai === -1 || bi === -1) return 'tu';
-  return (ai < bi) ? 'tu' : 'player';
-}
-
-    function placeRoleChips(){
   // Legge i ruoli reali scritti da assignPositions()
   const btnIdx = seatIndexByPosTag('BTN');
   const sbIdx  = seatIndexByPosTag('SB');
@@ -541,12 +465,52 @@ function firstActorForStreet(st){
 
 
 
+
+
+
+    // ===== ORDINE DI AZIONE =====
+// Ordine completo 9-max in senso orario a partire da BTN:
+const PREFLOP_ORDER  = ['UTG','+1','LJ','HJ','MP','CO','BTN','SB','BB']; // preflop inizia UTG
+const POSTFLOP_ORDER = ['SB','BB','UTG','+1','LJ','HJ','MP','CO','BTN']; // postflop inizia SB
+
+function positionOf(who){
+  const seatIdx = (who === 'tu' ? tuSeat : playerSeat) - 1;
+  return seats[seatIdx].posEl.textContent; // es. 'BTN','SB','BB','UTG','+1','LJ','HJ','MP','CO'
+}
+    
+function seatIndexByPosTag(tag){
+  const s = seats.find(seat => seat.posEl.textContent === tag);
+  return s ? s.idx : null; // 1..9 oppure null
+}
+
+function seatIndexByPosTag(tag){
+  const s = seats.find(seat => seat.posEl.textContent === tag);
+  return s ? s.idx : null; // 1..9, oppure null se non trovato
+}
+
+// Ritorna 'tu' o 'player' a seconda di chi viene prima nell'ordine della street
+function firstActorForStreet(st){
+  const tuPos = positionOf('tu');
+  const plPos = positionOf('player');
+  const order = (st === 'preflop') ? PREFLOP_ORDER : POSTFLOP_ORDER;
+
+  const ai = order.indexOf(tuPos);
+  const bi = order.indexOf(plPos);
+
+  // fallback robusto: se non trovati, lascia 'tu' first
+  if (ai === -1 || bi === -1) return 'tu';
+  return (ai < bi) ? 'tu' : 'player';
+}
+
+
 function newHand(){
   // Ruota BTN in senso orario
   btnSeat = (btnSeat % 9) + 1;
 
   // Assegna posizioni
   assignPositions();
+  placeRoleChips();
+
 
   // Scegli avversario tra 2..9
   const opp = pickOpponentSeat();
@@ -578,8 +542,6 @@ potEl.textContent = `Piatto: ${pot} bb`;
   streetTagEl.textContent = `Street: ${street.toUpperCase()}`;
   renderHistoryPanel();
   renderActions();
-  placeRoleChips();
-
 }
 
 
@@ -823,8 +785,6 @@ function renderActions(){
     document.getElementById('flipPlayer').addEventListener('click', ()=>{ playerFaceUp = !playerFaceUp; renderHands(); });
 
     // Avvio
-assignPositions();
-placeRoleChips();
 newHand();
 
 
