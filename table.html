@@ -472,7 +472,13 @@ function positionOf(who){
   const seatIdx = (who === 'tu' ? tuSeat : playerSeat) - 1;
   return seats[seatIdx].posEl.textContent; // es. 'BTN','SB','BB','UTG','+1','LJ','HJ','MP','CO'
 }
+    
+function seatIndexByPosTag(tag){
+  const s = seats.find(seat => seat.posEl.textContent === tag);
+  return s ? s.idx : null; // 1..9 oppure null
+}
 
+    
 function seatIndexByPosTag(tag){
   const s = seats.find(seat => seat.posEl.textContent === tag);
   return s ? s.idx : null; // 1..9 oppure null
@@ -498,6 +504,41 @@ function firstActorForStreet(st){
   if (ai === -1 || bi === -1) return 'tu';
   return (ai < bi) ? 'tu' : 'player';
 }
+
+    function placeRoleChips(){
+  // Legge i ruoli reali scritti da assignPositions()
+  const btnIdx = seatIndexByPosTag('BTN');
+  const sbIdx  = seatIndexByPosTag('SB');
+  const bbIdx  = seatIndexByPosTag('BB');
+
+  // BTN -> D
+  if (btnIdx && SEAT_ANGLE[btnIdx] !== undefined){
+    const p = ovalPos(SEAT_ANGLE[btnIdx]);
+    btnEl.style.left = p.left;
+    btnEl.style.top  = p.top;
+    btnEl.textContent = 'D';
+    btnEl.title = 'Button';
+  }
+
+  // SB -> 0.5bb
+  if (sbIdx && SEAT_ANGLE[sbIdx] !== undefined){
+    const p = ovalPos(SEAT_ANGLE[sbIdx]);
+    sbEl.style.left = p.left;
+    sbEl.style.top  = p.top;
+    sbEl.textContent = '0.5bb';
+    sbEl.title = 'Small Blind: 0.5bb';
+  }
+
+  // BB -> 1bb
+  if (bbIdx && SEAT_ANGLE[bbIdx] !== undefined){
+    const p = ovalPos(SEAT_ANGLE[bbIdx]);
+    bbEl.style.left = p.left;
+    bbEl.style.top  = p.top;
+    bbEl.textContent = '1bb';
+    bbEl.title = 'Big Blind: 1bb';
+  }
+}
+
 
 
 function newHand(){
@@ -537,6 +578,8 @@ potEl.textContent = `Piatto: ${pot} bb`;
   streetTagEl.textContent = `Street: ${street.toUpperCase()}`;
   renderHistoryPanel();
   renderActions();
+  placeRoleChips();
+
 }
 
 
@@ -615,6 +658,7 @@ function lastAggressorOnStreet(st){
   }
   return null;
 }
+
 
 
     
@@ -782,6 +826,7 @@ function renderActions(){
 assignPositions();
 placeRoleChips();
 newHand();
+
 
   </script>
 </body>
