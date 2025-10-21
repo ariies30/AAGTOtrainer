@@ -331,6 +331,11 @@ const SEAT_ANGLE = {
   9: 320   // p9  bottom-right
 };
 
+    // Seat helpers (1..9)
+function nextSeat(i){ return (i % 9) + 1; }
+function seatAfter(i, steps){ let s=i; for(let k=0;k<steps;k++) s=nextSeat(s); return s; }
+
+
 // Converte un angolo (°) in coordinate % su ellisse centrata
 function ovalPos(angleDeg){
   const t = angleDeg * Math.PI / 180;
@@ -374,6 +379,8 @@ let pot = 0; // piatto in bb
     let tuSeat = TU_FIXED_SEAT;
     let playerSeat = null;   // indice seat 2..9
     let btnSeat = 1 + Math.floor(Math.random()*9); // BTN di partenza casuale
+    let sbSeatIdx = null;
+    let bbSeatIdx = null;
 
     let tuCards = [];
     let playerCards = [];
@@ -419,49 +426,54 @@ function resetSeats(){
     }
 
 function assignPositions(){
-  // Ordine richiesto in senso orario
+  // Ruoli in senso orario a partire dal BTN
   const order = ['BTN','SB','BB','UTG','+1','LJ','HJ','MP','CO'];
-  // assegna partendo dal BTN e proseguendo seat per seat in orario
+
+  // Mappa ruolo → seat index (1..9)
+  const seatByRole = {};
   for (let i = 0; i < 9; i++) {
-    const seatIdx0 = ((btnSeat - 1) + i) % 9;  // indice 0..8 del seat fisico
-    seats[seatIdx0].posEl.textContent = order[i];
+    const seatIdx = ((btnSeat - 1) + i) % 9 + 1; // 1..9
+    const role = order[i];
+    seatByRole[role] = seatIdx;
+
+    // Scrive il badge posizione sul seat fisico
+    seats[seatIdx - 1].posEl.textContent = role;
   }
+
+  // Salva SB/BB correnti (consecutivi rispetto al BTN)
+  sbSeatIdx = seatByRole['SB'];
+  bbSeatIdx = seatByRole['BB'];
 }
 
-
 function placeRoleChips(){
-  // Legge i ruoli reali scritti da assignPositions()
-  const btnIdx = seatIndexByPosTag('BTN');
-  const sbIdx  = seatIndexByPosTag('SB');
-  const bbIdx  = seatIndexByPosTag('BB');
-
-  // BTN -> D
-  if (btnIdx && SEAT_ANGLE[btnIdx] !== undefined){
-    const p = ovalPos(SEAT_ANGLE[btnIdx]);
+  // BTN
+  if (SEAT_ANGLE[btnSeat] !== undefined){
+    const p = ovalPos(SEAT_ANGLE[btnSeat]);
     btnEl.style.left = p.left;
     btnEl.style.top  = p.top;
     btnEl.textContent = 'D';
     btnEl.title = 'Button';
   }
 
-  // SB -> 0.5bb
-  if (sbIdx && SEAT_ANGLE[sbIdx] !== undefined){
-    const p = ovalPos(SEAT_ANGLE[sbIdx]);
+  // SB
+  if (sbSeatIdx && SEAT_ANGLE[sbSeatIdx] !== undefined){
+    const p = ovalPos(SEAT_ANGLE[sbSeatIdx]);
     sbEl.style.left = p.left;
     sbEl.style.top  = p.top;
     sbEl.textContent = '0.5bb';
     sbEl.title = 'Small Blind: 0.5bb';
   }
 
-  // BB -> 1bb
-  if (bbIdx && SEAT_ANGLE[bbIdx] !== undefined){
-    const p = ovalPos(SEAT_ANGLE[bbIdx]);
+  // BB
+  if (bbSeatIdx && SEAT_ANGLE[bbSeatIdx] !== undefined){
+    const p = ovalPos(SEAT_ANGLE[bbSeatIdx]);
     bbEl.style.left = p.left;
     bbEl.style.top  = p.top;
     bbEl.textContent = '1bb';
     bbEl.title = 'Big Blind: 1bb';
   }
 }
+
 
 
 
