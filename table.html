@@ -69,19 +69,7 @@ overflow-y: auto;
 
     /* Table */
     .table-wrap{position:relative; aspect-ratio:16/9; width:100%;}
-  .table-oval {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 78%;               /* leggermente più largo */
-  height: 60%;              /* più alto, forma ovale regolare */
-  background: radial-gradient(ellipse at center, #0d7c52 0%, #0b5e3b 70%, #084b2f 100%);
-  border-radius: 50% / 48%; /* ovale, senza estremità tagliate */
-  border: 12px solid #2d190a;
-  box-shadow: inset 0 0 0 3px #0a3e2a, 0 30px 60px rgba(0,0,0,0.45);
-}
-
+    .table-oval{position:absolute; inset:12% 16%; margin:auto; width:auto; height:auto; background: radial-gradient(ellipse at center, #0d7c52 0%, #0b5e3b 60%, #084b2f 100%); border-radius:50% / 40%; border:10px solid #2d190a; box-shadow:inset 0 0 0 3px #0a3e2a, 0 30px 60px rgba(0,0,0,.45)}
     .center-pot{position:absolute; left:50%; top:48%; transform:translate(-50%,-50%); padding:10px 14px; border-radius:12px; background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(6px)}
 
     /* Mazziere fisso (in basso al centro, fuori dall'ovale) */
@@ -91,7 +79,6 @@ overflow-y: auto;
 
     /* Chip generiche */
     .chip {position:absolute; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.35); border:1px solid rgba(0,0,0,.2); color:#111; z-index:5}
-    .chip { font-size: 12px; padding: 0 4px; }
     .chip-btn { background:#fff; }
     .chip-sb { background:#9fd4ff; }
     .chip-bb { background:#ff9da0; }
@@ -174,32 +161,6 @@ overflow-y: auto;
   justify-content:flex-start;
 }
 
-.chip {
-  position: absolute;
-  min-width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  line-height: 1;
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgba(0,0,0,.35);
-  border: 1px solid rgba(0,0,0,.2);
-  color: #111;
-  padding: 0 4px;         /* permette testi come "0.5bb" */
-  text-align: center;
-  background: #fff;
-  z-index: 5;
-  transform: translate(-50%, -50%); /* centra la chip sul punto calcolato */
-}
-
-.chip-sb { background: #9fd4ff; }
-.chip-bb { background: #ff9da0; }
-.chip-btn { background: #fff; }
-
-
   </style>
 </head>
 <body>
@@ -222,6 +183,9 @@ overflow-y: auto;
 
       <div class="history" id="history">
     <div><strong>Preflop:</strong> —</div>
+    <div><strong>Flop:</strong> —</div>
+    <div><strong>Turn:</strong> —</div>
+    <div><strong>River:</strong> —</div>
   </div>
 
     <div class="table-wrap">
@@ -308,42 +272,18 @@ function faceDownEl(){
 }
 
 
-const CHIP_OVAL = {
-  cx: 50,
-  cy: 52,
-  rx: 33,   // 🔽 raggio orizzontale ridotto → più interno
-  ry: 24    // 🔽 raggio verticale ridotto → più vicino al centro
-};
-
-
-
-// Angoli (in gradi) per i 9 seat orientati come sul tavolo (in senso orario)
-// 90° = top, 0° = destra, 180° = sinistra, 270°/−90° = bottom
-const SEAT_ANGLE = {
-  1: 220,  // p1  bottom-left
-  2: 200,  // p2  left-lower
-  3: 150,  // p3  left-upper
-  4: 120,  // p4  upper-left
-  5:  90,  // p5  top center
-  6:  60,  // p6  upper-right
-  7:  30,  // p7  right-upper
-  8: 340,  // p8  right-lower
-  9: 320   // p9  bottom-right
-};
-
-    // Seat helpers (1..9)
-function nextSeat(i){ return (i % 9) + 1; }
-function seatAfter(i, steps){ let s=i; for(let k=0;k<steps;k++) s=nextSeat(s); return s; }
-
-
-// Converte un angolo (°) in coordinate % su ellisse centrata
-function ovalPos(angleDeg){
-  const t = angleDeg * Math.PI / 180;
-  const x = CHIP_OVAL.cx + CHIP_OVAL.rx * Math.cos(t);
-  const y = CHIP_OVAL.cy + CHIP_OVAL.ry * Math.sin(t);
-  return { left: x.toFixed(2) + '%', top: y.toFixed(2) + '%' };
-}
-
+    // Coordinate per i chip BTN/SB/BB vicino al bordo dell'ovale
+    const BTN_POS = {
+      1: {left:'28%', top:'64%'},
+      2: {left:'18%', top:'60%'},
+      3: {left:'16%', top:'32%'},
+      4: {left:'28%', top:'20%'},
+      5: {left:'50%', top:'18%'},
+      6: {left:'72%', top:'20%'},
+      7: {left:'84%', top:'32%'},
+      8: {left:'82%', top:'60%'},
+      9: {left:'72%', top:'64%'}
+    };
 
     // Riferimenti ai 9 seat
     const seats = $$('.seat').map((el,idx)=>({
@@ -366,11 +306,11 @@ const historyEl   = document.getElementById('history');
 const actionsEl   = document.getElementById('actions');
 
 // Stato per street & history
-const STREETS = ['preflop'];
+const STREETS = ['preflop','flop','turn','river'];
 let street = 'preflop';
-let history = { preflop: [] };
+let history = { preflop: [], flop: [], turn: [], river: [] };
 let toAct = 'tu'; // 'tu' | 'player'
-let pot = 0; // piatto in bb
+let handOver = false; // true quando la mano è chiusa
 
 
 
@@ -379,8 +319,6 @@ let pot = 0; // piatto in bb
     let tuSeat = TU_FIXED_SEAT;
     let playerSeat = null;   // indice seat 2..9
     let btnSeat = 1 + Math.floor(Math.random()*9); // BTN di partenza casuale
-    let sbSeatIdx = null;
-    let bbSeatIdx = null;
 
     let tuCards = [];
     let playerCards = [];
@@ -426,96 +364,61 @@ function resetSeats(){
     }
 
 function assignPositions(){
-  // Ruoli in senso orario a partire dal BTN
+  // Ordine richiesto in senso orario
   const order = ['BTN','SB','BB','UTG','+1','LJ','HJ','MP','CO'];
-
-  // Mappa ruolo → seat index (1..9)
-  const seatByRole = {};
+  // assegna partendo dal BTN e proseguendo seat per seat in orario
   for (let i = 0; i < 9; i++) {
-    const seatIdx = ((btnSeat - 1) + i) % 9 + 1; // 1..9
-    const role = order[i];
-    seatByRole[role] = seatIdx;
-
-    // Scrive il badge posizione sul seat fisico
-    seats[seatIdx - 1].posEl.textContent = role;
-  }
-
-  // Salva SB/BB correnti (consecutivi rispetto al BTN)
-  sbSeatIdx = seatByRole['SB'];
-  bbSeatIdx = seatByRole['BB'];
-}
-
-function placeRoleChips(){
-  // BTN
-  if (SEAT_ANGLE[btnSeat] !== undefined){
-    const p = ovalPos(SEAT_ANGLE[btnSeat]);
-    btnEl.style.left = p.left;
-    btnEl.style.top  = p.top;
-    btnEl.textContent = 'D';
-    btnEl.title = 'Button';
-  }
-
-  // SB
-  if (sbSeatIdx && SEAT_ANGLE[sbSeatIdx] !== undefined){
-    const p = ovalPos(SEAT_ANGLE[sbSeatIdx]);
-    sbEl.style.left = p.left;
-    sbEl.style.top  = p.top;
-    sbEl.textContent = '0.5bb';
-    sbEl.title = 'Small Blind: 0.5bb';
-  }
-
-  // BB
-  if (bbSeatIdx && SEAT_ANGLE[bbSeatIdx] !== undefined){
-    const p = ovalPos(SEAT_ANGLE[bbSeatIdx]);
-    bbEl.style.left = p.left;
-    bbEl.style.top  = p.top;
-    bbEl.textContent = '1bb';
-    bbEl.title = 'Big Blind: 1bb';
+    const seatIdx0 = ((btnSeat - 1) + i) % 9;  // indice 0..8 del seat fisico
+    seats[seatIdx0].posEl.textContent = order[i];
   }
 }
 
 
-
-
-
-
+    function placeDealerChip(){
+      const pos = BTN_POS[btnSeat];
+      if(pos){ btnEl.style.left = pos.left; btnEl.style.top = pos.top; }
+    }
+    function placeBlindChips(){
+      const sbSeat = btnSeat % 9 + 1;
+      const bbSeat = (sbSeat % 9) + 1;
+      const sbPos = BTN_POS[sbSeat];
+      const bbPos = BTN_POS[bbSeat];
+      if (sbPos) { sbEl.style.left = sbPos.left; sbEl.style.top = sbPos.top; }
+      if (bbPos) { bbEl.style.left = bbPos.left; bbEl.style.top = bbPos.top; }
+    }
 
     // ===== ORDINE DI AZIONE =====
 // Ordine completo 9-max in senso orario a partire da BTN:
 const PREFLOP_ORDER  = ['UTG','+1','LJ','HJ','MP','CO','BTN','SB','BB']; // preflop inizia UTG
+const POSTFLOP_ORDER = ['SB','BB','UTG','+1','LJ','HJ','MP','CO','BTN']; // postflop inizia SB
 
 function positionOf(who){
   const seatIdx = (who === 'tu' ? tuSeat : playerSeat) - 1;
   return seats[seatIdx].posEl.textContent; // es. 'BTN','SB','BB','UTG','+1','LJ','HJ','MP','CO'
 }
-    
-function seatIndexByPosTag(tag){
-  const s = seats.find(seat => seat.posEl.textContent === tag);
-  return s ? s.idx : null; // 1..9 oppure null
-}
 
 // Ritorna 'tu' o 'player' a seconda di chi viene prima nell'ordine della street
-function firstActorForStreet(){
+function firstActorForStreet(st){
   const tuPos = positionOf('tu');
   const plPos = positionOf('player');
-  const order = PREFLOP_ORDER; // sempre preflop
+  const order = (st === 'preflop') ? PREFLOP_ORDER : POSTFLOP_ORDER;
 
   const ai = order.indexOf(tuPos);
   const bi = order.indexOf(plPos);
+
+  // fallback robusto: se non trovati, lascia 'tu' first
   if (ai === -1 || bi === -1) return 'tu';
   return (ai < bi) ? 'tu' : 'player';
 }
 
 
-
 function newHand(){
+  handOver = false;
   // Ruota BTN in senso orario
   btnSeat = (btnSeat % 9) + 1;
 
   // Assegna posizioni
   assignPositions();
-  placeRoleChips();
-
 
   // Scegli avversario tra 2..9
   const opp = pickOpponentSeat();
@@ -527,17 +430,17 @@ function newHand(){
   playerCards = [deck.pop(), deck.pop()];
   theBoard = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
 
-// Solo preflop
-street = 'preflop';
-buildHistoryUpTo(street);
-streetTagEl.textContent = 'Street: PREFLOP';
-
+  // Street random + storia
+  street = pickRandomStreet();
+  buildHistoryUpTo(street);
+  renderStreetBoard(street);
 
   // UI
   renderHands();
   renderBoard();
-pot = 1.5; // 0.5 + 1
-potEl.textContent = `Piatto: ${pot} bb`;
+  potEl.textContent = 'Piatto: 0 bb';
+placeDealerChip();
+placeBlindChips();
 
 
   // Info
@@ -577,38 +480,139 @@ function renderHands(){
 }
 
 
-function renderBoard(){ boardEl.innerHTML=''; }
+function renderBoard(){
+  boardEl.innerHTML='';
+  // mostra solo le community fino allo street corrente
+  const n = street==='preflop' ? 0 : street==='flop' ? 3 : street==='turn' ? 4 : 5;
+  theBoard.slice(0,n).forEach((c)=>{ const el=cardEl(c); boardEl.appendChild(el); });
+}
+
+    function pickRandomStreet(){
+  // Bias: 10% pre, 55% flop, 30% turn, 5% river (scenari decisionali)
+  const r = Math.random();
+  if(r < 0.10) return 'preflop';
+  if(r < 0.65) return 'flop';
+  if(r < 0.95) return 'turn';
+  return 'river';
+}
 
 function appendAction(st, who, type, size=''){
   history[st].push({who,type,size});
 }
 
-function buildHistoryUpTo(){
-  history = { preflop: [] };
-  toAct = firstActorForStreet('preflop'); // parte UTG-side
+function randomPreflop(){
+  const actor = firstActorForStreet('preflop');            // chi deve parlare per primo (UTG-side)
+  const opp   = (actor === 'tu') ? 'player' : 'tu';
+  toAct = actor;
+
+  const r = Math.random();
+  // esempi plausibili e simmetrici, rispettando chi inizia:
+  if (r < 0.33){
+    appendAction('preflop', actor, 'raise', '3bb');
+    appendAction('preflop', opp,   'call');
+    toAct = actor; // dopo il call, azione torna all'aggressore per semplicità nello spot corrente
+  } else if (r < 0.66){
+    appendAction('preflop', actor, 'limp');
+    appendAction('preflop', opp,   'check');
+    toAct = actor;
+  } else {
+    appendAction('preflop', actor, 'raise', '2.5bb');
+    appendAction('preflop', opp,   Math.random()<0.5 ? 'fold' : 'call');
+    toAct = actor;
+  }
 }
 
+function randomFlop(){
+  const actor = firstActorForStreet('flop');               // postflop inizia SB-side
+  const opp   = (actor === 'tu') ? 'player' : 'tu';
+  toAct = actor;
+
+  const r = Math.random();
+  if (r < 0.4){
+    appendAction('flop', actor, 'bet', '1/2');
+    appendAction('flop', opp,   Math.random()<0.7 ? 'call' : 'fold');
+    toAct = actor;
+  } else if (r < 0.7){
+    appendAction('flop', actor, 'check');
+    appendAction('flop', opp,   Math.random()<0.6 ? 'bet' : 'check', Math.random()<0.6 ? '1/3' : '');
+    toAct = (history.flop.at(-1)?.type === 'bet') ? actor : opp;
+  } else {
+    appendAction('flop', actor, 'check');
+    appendAction('flop', opp,   'check');
+    toAct = actor;
+  }
+}
+
+function randomTurn(){
+  const actor = firstActorForStreet('turn');               // anche turn segue ordinamento postflop
+  const opp   = (actor === 'tu') ? 'player' : 'tu';
+  toAct = actor;
+
+  const r = Math.random();
+  if (r < 0.45){
+    appendAction('turn', actor, 'bet', '2/3');
+    appendAction('turn', opp,   Math.random()<0.65 ? 'call' : 'fold');
+    toAct = actor;
+  } else if (r < 0.75){
+    appendAction('turn', actor, 'check');
+    appendAction('turn', opp,   Math.random()<0.6 ? 'bet' : 'check', Math.random()<0.6 ? '1/2' : '');
+    toAct = (history.turn.at(-1)?.type === 'bet') ? actor : opp;
+  } else {
+    appendAction('turn', actor, 'check');
+    toAct = opp;
+  }
+}
+
+
+function buildHistoryUpTo(st){
+  history = { preflop: [], flop: [], turn: [], river: [] };
+
+  // PRE-FLOP (UTG first)
+  toAct = firstActorForStreet('preflop');
+  randomPreflop();
+  if (st === 'preflop') return;
+
+  // FLOP (SB first)
+  toAct = firstActorForStreet('flop');
+  randomFlop();
+  if (st === 'flop') return;
+
+  // TURN (SB first)
+  toAct = firstActorForStreet('turn');
+  randomTurn();
+  if (st === 'turn') return;
+
+  // RIVER (SB first): semplice
+  toAct = firstActorForStreet('river');
+  const r = Math.random();
+  if (r < 0.5){
+    appendAction('river', toAct, 'bet', '1/2');
+    appendAction('river', (toAct==='tu'?'player':'tu'), Math.random()<0.65 ? 'call' : 'fold');
+  } else {
+    appendAction('river', toAct, 'check');
+  }
+}
 
 
 function renderHistoryPanel(){
-  const fmt = (arr)=> arr && arr.length
-    ? arr.map(a=>`${a.who}: ${a.type}${a.size?` ${a.size}`:''}`).join(' · ')
-    : '—';
-  historyEl.innerHTML = `<div><strong>Preflop:</strong> ${fmt(history.preflop)}</div>`;
+  const fmt = (arr)=> arr.length? arr.map(a=>`${a.who}: ${a.type}${a.size?` ${a.size}`:''}`).join(' · ') : '—';
+  historyEl.innerHTML = `
+    <div><strong>Preflop:</strong> ${fmt(history.preflop)}</div>
+    <div><strong>Flop:</strong> ${fmt(history.flop)}</div>
+    <div><strong>Turn:</strong> ${fmt(history.turn)}</div>
+    <div><strong>River:</strong> ${fmt(history.river)}</div>
+  `;
 }
 
+function renderStreetBoard(st){ street = st; renderBoard(); streetTagEl.textContent = `Street: ${street.toUpperCase()}`; }
 
 function lastAggressorOnStreet(st){
-  const arr = history[st] || [];
-  for (let i = arr.length - 1; i >= 0; i--){
-    if (arr[i].type === 'bet' || arr[i].type === 'raise') return arr[i].who;
+  for(let i=history[st].length-1;i>=0;i--){
+    if(['bet','raise'].includes(history[st][i].type)) return history[st][i].who;
   }
   return null;
 }
 
-
-
-    
     // === Street helpers ===
 function lastAction(st){
   const arr = history[st];
@@ -618,7 +622,10 @@ function raisesOnStreet(st){
   // conta solo 'raise' (il primo 'bet' non è raise)
   return history[st].filter(a => a.type === 'raise').length;
 }
-
+function bothChecked(st){
+  const arr = history[st];
+  return arr.length >= 2 && arr[arr.length-1].type === 'check' && arr[arr.length-2].type === 'check';
+}
 function lastIsCallClosing(st){
   // heads-up: se c'è stata una bet/raise e l'altro fa 'call', la street è chiusa
   const arr = history[st];
@@ -629,37 +636,36 @@ function lastIsCallClosing(st){
   // chiude se il call è dell'altro rispetto all'ultimo aggressore
   return aggressor && last.who !== aggressor;
 }
-    
 function endOfStreetReached(){
-  // Preflop si chiude su:
-  // - call che chiude l'ultima aggressione
-  // - sequenza limp -> check
-  const arr = history.preflop;
-  if (!arr.length) return false;
-
-  // call che chiude
-  if (lastIsCallClosing('preflop')) return true;
-
-  // limp -> check
-  const len = arr.length;
-  if (len >= 2 && arr[len-2].type === 'limp' && arr[len-1].type === 'check') return true;
-
-  return false;
+  if (handOver) return false; // ⬅️ se la mano è chiusa, non “avanzare”
+  return bothChecked(street) || lastIsCallClosing(street);
 }
-
+function nextStreetName(cur){
+  if (cur === 'preflop') return 'flop';
+  if (cur === 'flop')    return 'turn';
+  if (cur === 'turn')    return 'river';
+  return null;
+}
 function advanceStreet(){
-  // in preflop-only, "avanzare" significa chiudere il training della mano
-  actionsEl.innerHTML = '<span class="tag">Preflop completo</span>';
+  if (handOver) return; // ⬅️ non avanzare mai se la mano è chiusa
+  const nxt = nextStreetName(street);
+  if (!nxt){
+    actionsEl.innerHTML = '<span class="tag">Showdown</span>';
+    return;
+  }
+  renderStreetBoard(nxt);              // cambia street + board (aggiorna 'street')
+  toAct = firstActorForStreet(street); // street è stata aggiornata
+  renderHistoryPanel();
+  renderActions();
 }
-
 function maybeAdvanceStreet(){
+  if (handOver) return false; // ⬅️ blocco
   if (endOfStreetReached()){
     advanceStreet();
     return true;
   }
   return false;
 }
-
 
 // Etichetta "3-bet/4-bet/5-bet" in base al numero di raises già avvenuti
 function nextReRaiseLabel(){
@@ -684,92 +690,102 @@ function addBtn(text, cls, onClick){
 }
 
 function renderActions(){
+  // ⬅️ STOP immediato se la mano è chiusa
+  if (handOver){
+    actionsEl.innerHTML = '<span class="tag">Mano terminata</span>';
+    return;
+  }
+
   actionsEl.innerHTML = '';
   const actor = toAct; // 'tu' | 'player'
-  const aggressor = lastAggressorOnStreet('preflop');
-  const facingRaise = !!(aggressor && aggressor !== actor);
-  const raises = history.preflop.filter(a=>a.type==='raise').length;
-
-  function endHand(msg='Preflop completo'){
-    actionsEl.innerHTML = `<span class="tag">${msg}</span>`;
-  }
-
-  function addBtn(text, cls, onClick){
-    const b = document.createElement('button');
-    b.className = 'btn'+(cls?` ${cls}`:'');
-    b.textContent = text;
-    b.addEventListener('click', onClick);
-    actionsEl.appendChild(b);
-  }
+  const aggressor = lastAggressorOnStreet(street);
+  const facingBet = !!(aggressor && aggressor !== actor);
 
   function doAndNext(who, type, size){
-    appendAction('preflop', who, type, size);
+    appendAction(street, who, type, size);
     renderHistoryPanel();
 
-    if (type === 'fold'){ endHand('Mano terminata (fold preflop)'); return; }
+    // ⬅️ CHIUSURA DEFINITIVA SU FOLD
+    if (type === 'fold'){
+      handOver = true; // ⬅️ segna fine mano
+      actionsEl.innerHTML = '<span class="tag">Mano terminata</span>';
+      return;
+    }
+
+    // Se la street è chiusa (check-check o call che chiude) → avanza
     if (maybeAdvanceStreet()) return;
 
+    // Passa il turno all'altro
     toAct = (who === 'tu') ? 'player' : 'tu';
+
+    // Se nel frattempo qualcuno ha chiuso, non continuare
+    if (handOver){
+      actionsEl.innerHTML = '<span class="tag">Mano terminata</span>';
+      return;
+    }
     renderActions();
   }
 
-  // posizione dell'attore (BTN, SB, BB, UTG, ...)
-  const actorPos = positionOf(actor);
-
   // === TURNO DI "tu" ===
   if (actor === 'tu'){
-    if (!facingRaise){
-      // se "tu" sei BB, puoi CHECKARE l’over-limp
-      if (actorPos === 'BB'){
-        addBtn('Check', '', ()=> doAndNext('tu','check'));
-        addBtn('Raise 2.5bb','primary', ()=> doAndNext('tu','raise','2.5bb'));
-      } else {
-        addBtn('Fold','warn', ()=> doAndNext('tu','fold'));
-        addBtn('Limp','',     ()=> doAndNext('tu','limp'));
-        addBtn('Open 2.5bb','primary', ()=> doAndNext('tu','raise','2.5bb'));
+    if (facingBet){
+      addBtn('Call',  'primary', ()=> doAndNext('tu','call'));
+      addBtn('Fold',  'warn',    ()=> doAndNext('tu','fold'));               // ⬅️ fold chiude
+      if (canReRaise()){
+        addBtn(nextReRaiseLabel(), '', ()=> doAndNext('tu','raise','2x'));
       }
     } else {
-      addBtn('Call','primary', ()=> doAndNext('tu','call'));
-      addBtn('Fold','warn',    ()=> doAndNext('tu','fold'));
-      if (raises === 1) addBtn('3-bet','', ()=> doAndNext('tu','raise','3x'));
-      if (raises === 2) addBtn('4-bet','', ()=> doAndNext('tu','raise','2x'));
-      if (raises === 3) addBtn('5-bet','', ()=> doAndNext('tu','raise','2x'));
+      addBtn('Check', '',        ()=> doAndNext('tu','check'));
+      addBtn('Bet 1/2','primary',()=> doAndNext('tu','bet','1/2'));
     }
     return;
   }
 
-  // === TURNO "player" (AI minimale) ===
+  // === TURNO DEL "player" (AI semplice) ===
   const r = Math.random();
-  if (!facingRaise){
-    if (actorPos === 'BB'){
-      // BB: check come default, a volte isoraise
-      if (r < 0.75) doAndNext('player','check');
-      else          doAndNext('player','raise','2.5bb'); // iso-raise
+  if (facingBet){
+    if (canReRaise() && r < 0.20){
+      doAndNext('player','raise','2x');
+    } else if (r < 0.70){
+      doAndNext('player','call');
     } else {
-      if (r < 0.25)         doAndNext('player','fold');
-      else if (r < 0.45)    doAndNext('player','limp');
-      else                  doAndNext('player','raise','2.5bb');
+      doAndNext('player','fold'); // ⬅️ fold chiude
     }
   } else {
-    if (raises === 1){
-      if (r < 0.55)       doAndNext('player','call');
-      else if (r < 0.80)  doAndNext('player','raise','3x');
-      else                doAndNext('player','fold');
-    } else if (raises === 2){
-      if (r < 0.55)       doAndNext('player','call');
-      else if (r < 0.75)  doAndNext('player','raise','2x');
-      else                doAndNext('player','fold');
-    } else if (raises === 3){
-      if (r < 0.55)       doAndNext('player','call');
-      else if (r < 0.70)  doAndNext('player','raise','2x');
-      else                doAndNext('player','fold');
+    if (r < 0.50){
+      doAndNext('player','check');
     } else {
-      doAndNext('player','call');
+      doAndNext('player','bet','1/3');
     }
   }
 }
 
 
+  // === TURNO DEL "player" (semplice AI coerente con le regole) ===
+  // Simuliamo risposte: se subisce bet/raise, può Call/Fold/4-bet (fino a 5-bet totale),
+  // altrimenti può Check/Bet.
+  const r = Math.random();
+
+  if (facingBet){
+    if (canReRaise() && r < 0.20){
+      // Re-raise (3/4/5-bet)
+      doAndNext('player','raise','2x');
+    } else if (r < 0.70){
+      // Call più frequente
+      doAndNext('player','call');
+    } else {
+      // Fold
+      doAndNext('player','fold');
+    }
+  } else {
+    // Nessuna bet pendente
+    if (r < 0.50){
+      doAndNext('player','check');
+    } else {
+      doAndNext('player','bet','1/3');
+    }
+  }
+}
 
 
 
@@ -779,9 +795,10 @@ function renderActions(){
     document.getElementById('flipPlayer').addEventListener('click', ()=>{ playerFaceUp = !playerFaceUp; renderHands(); });
 
     // Avvio
-newHand();
-
-
+    assignPositions();
+    placeDealerChip();
+    placeBlindChips();
+    newHand();
   </script>
 </body>
 </html>
