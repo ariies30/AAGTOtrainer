@@ -229,15 +229,19 @@ overflow-y: auto;
 const CARD_BASE = "assets/cards";
 const CARD_EXT  = "svg"; // se usi png metti "png"
 
-// mappa per nomi seme e rank
+// mappa per semi (ok) + rank (figure in lettere)
 const SUIT_NAME = { "♣":"clubs", "♦":"diamonds", "♥":"hearts", "♠":"spades" };
-function RANK_NAME(r){ return r === "T" ? "10" : r; }
+const RANK_FILE = { A:"ace", K:"king", Q:"queen", J:"jack", T:"10" };
+function RANK_NAME(r){ return RANK_FILE[r] || r; } // numeri restano "2","3",…
 
-// costruisce il path dell’immagine
 function cardSrc(rank, suit){
   return `${CARD_BASE}/${RANK_NAME(rank)}_of_${SUIT_NAME[suit]}.${CARD_EXT}`;
 }
-const CARD_BACK = `${CARD_BASE}/back.${CARD_EXT}`;
+
+// scegli un dorso che esiste nella tua cartella.
+// Se non hai "back.svg", prova "back-blue.svg" o metti un tuo nome valido.
+const CARD_BACK = `${CARD_BASE}/back-blue.${CARD_EXT}`;
+
 
     const $ = s => document.querySelector(s);
     const $$ = s => Array.from(document.querySelectorAll(s));
