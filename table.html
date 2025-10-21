@@ -571,28 +571,6 @@ function appendAction(st, who, type, size=''){
   history[st].push({who,type,size});
 }
 
-function randomPreflop(){
-  const actor = firstActorForStreet('preflop');            // chi deve parlare per primo (UTG-side)
-  const opp   = (actor === 'tu') ? 'player' : 'tu';
-  toAct = actor;
-
-  const r = Math.random();
-  // esempi plausibili e simmetrici, rispettando chi inizia:
-  if (r < 0.33){
-    appendAction('preflop', actor, 'raise', '3bb');
-    appendAction('preflop', opp,   'call');
-    toAct = actor; // dopo il call, azione torna all'aggressore per semplicità nello spot corrente
-  } else if (r < 0.66){
-    appendAction('preflop', actor, 'limp');
-    appendAction('preflop', opp,   'check');
-    toAct = actor;
-  } else {
-    appendAction('preflop', actor, 'raise', '2.5bb');
-    appendAction('preflop', opp,   Math.random()<0.5 ? 'fold' : 'call');
-    toAct = actor;
-  }
-}
-
 function buildHistoryUpTo(){
   history = { preflop: [] };
   toAct = firstActorForStreet('preflop'); // parte UTG-side
