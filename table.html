@@ -482,11 +482,6 @@ function seatIndexByPosTag(tag){
   return s ? s.idx : null; // 1..9 oppure null
 }
 
-function seatIndexByPosTag(tag){
-  const s = seats.find(seat => seat.posEl.textContent === tag);
-  return s ? s.idx : null; // 1..9, oppure null se non trovato
-}
-
 // Ritorna 'tu' o 'player' a seconda di chi viene prima nell'ordine della street
 function firstActorForStreet(){
   const tuPos = positionOf('tu');
@@ -702,7 +697,7 @@ function renderActions(){
   actionsEl.innerHTML = '';
   const actor = toAct; // 'tu' | 'player'
   const aggressor = lastAggressorOnStreet('preflop');
-  const facingRaise = !!(aggressor && aggressor !== actor); // sto subendo open/3bet/4bet...
+  const facingRaise = !!(aggressor && aggressor !== actor);
   const raises = history.preflop.filter(a=>a.type==='raise').length;
 
   function endHand(msg='Preflop completo'){
@@ -728,48 +723,62 @@ function renderActions(){
     renderActions();
   }
 
+  // posizione dell'attore (BTN, SB, BB, UTG, ...)
+  const actorPos = positionOf(actor);
+
   // === TURNO DI "tu" ===
   if (actor === 'tu'){
     if (!facingRaise){
-      // Apertura spot: Fold / Limp / Open
-      addBtn('Fold', 'warn', ()=> doAndNext('tu','fold'));
-      addBtn('Limp', '',      ()=> doAndNext('tu','limp'));
-      addBtn('Open 2.5bb', 'primary', ()=> doAndNext('tu','raise','2.5bb'));
+      // se "tu" sei BB, puoi CHECKARE l’over-limp
+      if (actorPos === 'BB'){
+        addBtn('Check', '', ()=> doAndNext('tu','check'));
+        addBtn('Raise 2.5bb','primary', ()=> doAndNext('tu','raise','2.5bb'));
+      } else {
+        addBtn('Fold','warn', ()=> doAndNext('tu','fold'));
+        addBtn('Limp','',     ()=> doAndNext('tu','limp'));
+        addBtn('Open 2.5bb','primary', ()=> doAndNext('tu','raise','2.5bb'));
+      }
     } else {
-      // Sto affrontando open/3bet/4bet...
-      addBtn('Call', 'primary', ()=> doAndNext('tu','call'));
-      addBtn('Fold', 'warn',    ()=> doAndNext('tu','fold'));
-      if (raises === 1) addBtn('3-bet', '', ()=> doAndNext('tu','raise','3x'));
-      if (raises === 2) addBtn('4-bet', '', ()=> doAndNext('tu','raise','2x'));
-      if (raises === 3) addBtn('5-bet', '', ()=> doAndNext('tu','raise','2x'));
+      addBtn('Call','primary', ()=> doAndNext('tu','call'));
+      addBtn('Fold','warn',    ()=> doAndNext('tu','fold'));
+      if (raises === 1) addBtn('3-bet','', ()=> doAndNext('tu','raise','3x'));
+      if (raises === 2) addBtn('4-bet','', ()=> doAndNext('tu','raise','2x'));
+      if (raises === 3) addBtn('5-bet','', ()=> doAndNext('tu','raise','2x'));
     }
     return;
   }
 
-  // === TURNO DEL "player" (AI minimale coerente) ===
+  // === TURNO "player" (AI minimale) ===
   const r = Math.random();
   if (!facingRaise){
-    if (r < 0.25) doAndNext('player','fold');
-    else if (r < 0.45) doAndNext('player','limp');
-    else doAndNext('player','raise','2.5bb'); // open
-  } else {
-    if (raises === 1){ // facing open
-      if (r < 0.55) doAndNext('player','call');
-      else if (r < 0.80) doAndNext('player','raise','3x'); // 3-bet
-      else doAndNext('player','fold');
-    } else if (raises === 2){ // facing 3-bet
-      if (r < 0.55) doAndNext('player','call');
-      else if (r < 0.75) doAndNext('player','raise','2x'); // 4-bet
-      else doAndNext('player','fold');
-    } else if (raises === 3){ // facing 4-bet
-      if (r < 0.55) doAndNext('player','call');            // chiude preflop
-      else if (r < 0.70) doAndNext('player','raise','2x'); // 5-bet
-      else doAndNext('player','fold');
+    if (actorPos === 'BB'){
+      // BB: check come default, a volte isoraise
+      if (r < 0.75) doAndNext('player','check');
+      else          doAndNext('player','raise','2.5bb'); // iso-raise
     } else {
-      doAndNext('player','call'); // sicurezza
+      if (r < 0.25)         doAndNext('player','fold');
+      else if (r < 0.45)    doAndNext('player','limp');
+      else                  doAndNext('player','raise','2.5bb');
+    }
+  } else {
+    if (raises === 1){
+      if (r < 0.55)       doAndNext('player','call');
+      else if (r < 0.80)  doAndNext('player','raise','3x');
+      else                doAndNext('player','fold');
+    } else if (raises === 2){
+      if (r < 0.55)       doAndNext('player','call');
+      else if (r < 0.75)  doAndNext('player','raise','2x');
+      else                doAndNext('player','fold');
+    } else if (raises === 3){
+      if (r < 0.55)       doAndNext('player','call');
+      else if (r < 0.70)  doAndNext('player','raise','2x');
+      else                doAndNext('player','fold');
+    } else {
+      doAndNext('player','call');
     }
   }
 }
+
 
 
 
