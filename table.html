@@ -471,7 +471,6 @@ function placeRoleChips(){
     // ===== ORDINE DI AZIONE =====
 // Ordine completo 9-max in senso orario a partire da BTN:
 const PREFLOP_ORDER  = ['UTG','+1','LJ','HJ','MP','CO','BTN','SB','BB']; // preflop inizia UTG
-const POSTFLOP_ORDER = ['SB','BB','UTG','+1','LJ','HJ','MP','CO','BTN']; // postflop inizia SB
 
 function positionOf(who){
   const seatIdx = (who === 'tu' ? tuSeat : playerSeat) - 1;
@@ -489,18 +488,17 @@ function seatIndexByPosTag(tag){
 }
 
 // Ritorna 'tu' o 'player' a seconda di chi viene prima nell'ordine della street
-function firstActorForStreet(st){
+function firstActorForStreet(){
   const tuPos = positionOf('tu');
   const plPos = positionOf('player');
-  const order = (st === 'preflop') ? PREFLOP_ORDER : POSTFLOP_ORDER;
+  const order = PREFLOP_ORDER; // sempre preflop
 
   const ai = order.indexOf(tuPos);
   const bi = order.indexOf(plPos);
-
-  // fallback robusto: se non trovati, lascia 'tu' first
   if (ai === -1 || bi === -1) return 'tu';
   return (ai < bi) ? 'tu' : 'player';
 }
+
 
 
 function newHand(){
@@ -600,18 +598,20 @@ function randomPreflop(){
   }
 }
 
-function buildHistoryUpTo(st){
-  history = { preflop: [], flop: [], turn: [], river: [] }; // usiamo solo preflop
-  toAct = firstActorForStreet('preflop'); // UTG-side è first
+function buildHistoryUpTo(){
+  history = { preflop: [] };
+  toAct = firstActorForStreet('preflop'); // parte UTG-side
 }
 
 
+
 function renderHistoryPanel(){
-  const fmt = (arr)=> arr.length
+  const fmt = (arr)=> arr && arr.length
     ? arr.map(a=>`${a.who}: ${a.type}${a.size?` ${a.size}`:''}`).join(' · ')
     : '—';
   historyEl.innerHTML = `<div><strong>Preflop:</strong> ${fmt(history.preflop)}</div>`;
 }
+
 
 function lastAggressorOnStreet(st){
   const arr = history[st] || [];
@@ -633,10 +633,7 @@ function raisesOnStreet(st){
   // conta solo 'raise' (il primo 'bet' non è raise)
   return history[st].filter(a => a.type === 'raise').length;
 }
-function bothChecked(st){
-  const arr = history[st];
-  return arr.length >= 2 && arr[arr.length-1].type === 'check' && arr[arr.length-2].type === 'check';
-}
+
 function lastIsCallClosing(st){
   // heads-up: se c'è stata una bet/raise e l'altro fa 'call', la street è chiusa
   const arr = history[st];
@@ -664,8 +661,6 @@ function endOfStreetReached(){
 
   return false;
 }
-    
-function nextStreetName(){ return null; } // mai più altre street
 
 function advanceStreet(){
   // in preflop-only, "avanzare" significa chiudere il training della mano
